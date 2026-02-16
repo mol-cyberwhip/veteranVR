@@ -7,15 +7,18 @@ interface DownloadItemProps {
   onCancel: (pkg: string) => void;
   onInstall: (pkg: string) => void;
   onRetry: (pkg: string) => void;
+  onPause: (pkg: string) => void;
+  onResume: (pkg: string) => void;
 }
 
-export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel, onInstall, onRetry }) => {
-  const name = game?.game_name || item.game_name || item.package_name;
+export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel, onInstall, onRetry, onPause, onResume }) => {
+  const name = item.game_name || game?.game_name || item.package_name;
   const isCompleted = item.status === 'completed';
   const isFailed = item.status === 'failed';
   const isDownloading = item.status === 'downloading';
+  const isPaused = item.status === 'paused';
 
-  const statusClass = isCompleted ? 'status-completed' : isFailed ? 'status-failed' : isDownloading ? 'status-downloading' : '';
+  const statusClass = isCompleted ? 'status-completed' : isFailed ? 'status-failed' : isDownloading ? 'status-downloading' : isPaused ? 'status-paused' : '';
 
   return (
     <div className={`download-item ${statusClass}`}>
@@ -38,6 +41,22 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
           {item.progress_percent.toFixed(1)}%{item.eta ? ` - ETA: ${item.eta}` : ''}
         </span>
         <div className="download-item-actions">
+            {isDownloading && (
+                <button
+                    onClick={() => onPause(item.package_name)}
+                    className="btn-sm"
+                >
+                    Pause
+                </button>
+            )}
+            {isPaused && (
+                <button
+                    onClick={() => onResume(item.package_name)}
+                    className="btn-sm"
+                >
+                    Resume
+                </button>
+            )}
             {isCompleted && (
                 <button
                     onClick={() => onInstall(item.package_name)}

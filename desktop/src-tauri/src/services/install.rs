@@ -293,7 +293,13 @@ impl InstallService {
         })
     }
 
-    pub async fn uninstall_game(&self, package_name: &str, serial: Option<&str>) -> Result<InstallResult> {
+    pub async fn uninstall_game(
+        &self,
+        package_name: &str,
+        serial: Option<&str>,
+        keep_obb: bool,
+        keep_data: bool,
+    ) -> Result<InstallResult> {
         crate::logger::log(&format!("[UNINSTALL] Starting uninstall for {}", package_name));
         let uninstall = self
             .adb
@@ -303,17 +309,21 @@ impl InstallService {
 
         crate::logger::log(&format!("[UNINSTALL] pm uninstall result: {}", uninstall.output()));
 
-        crate::logger::log(&format!("[UNINSTALL] Cleaning up OBB for {}", package_name));
-        let _ = self
-            .adb
-            .shell(&format!("rm -rf /sdcard/Android/obb/{package_name}"), serial)
-            .await;
+        if !keep_obb {
+            crate::logger::log(&format!("[UNINSTALL] Cleaning up OBB for {}", package_name));
+            let _ = self
+                .adb
+                .shell(&format!("rm -rf /sdcard/Android/obb/{package_name}"), serial)
+                .await;
+        }
 
-        crate::logger::log(&format!("[UNINSTALL] Cleaning up data for {}", package_name));
-        let _ = self
-            .adb
-            .shell(&format!("rm -rf /sdcard/Android/data/{package_name}"), serial)
-            .await;
+        if !keep_data {
+            crate::logger::log(&format!("[UNINSTALL] Cleaning up data for {}", package_name));
+            let _ = self
+                .adb
+                .shell(&format!("rm -rf /sdcard/Android/data/{package_name}"), serial)
+                .await;
+        }
 
         if uninstall.output().contains("Success") {
             crate::logger::log(&format!("[UNINSTALL] {} uninstalled successfully", package_name));

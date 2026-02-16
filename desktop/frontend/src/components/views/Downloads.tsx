@@ -33,16 +33,56 @@ export default function DownloadsView() {
     } catch (e: any) { setError(e.message); }
   };
 
+  const handlePause = async (pkg: string) => {
+    try {
+        await api.pauseItem(pkg);
+        await refreshQueue();
+    } catch (e: any) { setError(e.message); }
+  };
+
+  const handleResume = async (pkg: string) => {
+    try {
+        await api.resumeItem(pkg);
+        await refreshQueue();
+    } catch (e: any) { setError(e.message); }
+  };
+
+  const handleRetry = async (pkg: string) => {
+    try {
+        await api.queueDownload(pkg);
+        await refreshQueue();
+    } catch (e: any) { setError(e.message); }
+  };
+
   const queue = downloadQueue?.queue || [];
   const activeDownload = downloadQueue?.active_download;
 
-  const activeDownloads = [...activeDownload ? [activeDownload] : [], ...queue.filter((i: any) => i.status === 'downloading' || i.status === 'extracting')];
-  const activePkgNames = new Set(activeDownloads.map((i: any) => i.package_name));
+  // Items are active if they are in the active_download slot OR in the queue with an active status.
+  // We use a Map keyed by package+release to avoid duplicates if the backend reports the same item in both.
+  const activeMap = new Map();
+  if (activeDownload) {
+    activeMap.set(`${activeDownload.package_name}|${activeDownload.release_name}`, activeDownload);
+  }
+  queue.forEach((i: any) => {
+    if (i.status === 'downloading' || i.status === 'extracting' || i.status === 'paused') {
+      activeMap.set(`${i.package_name}|${i.release_name}`, i);
+    }
+  });
+  const activeDownloads = Array.from(activeMap.values());
+  const activePkgNames = new Set(activeMap.keys());
 
-  const pendingDownloads = queue.filter((i: any) => i.status !== 'downloading' && i.status !== 'extracting' && i.status !== 'completed' && !activePkgNames.has(i.package_name));
+  const pendingDownloads = queue.filter((i: any) => 
+    i.status !== 'downloading' && 
+    i.status !== 'extracting' && 
+    i.status !== 'completed' && 
+    i.status !== 'cancelled' &&
+    i.status !== 'failed' &&
+    !activePkgNames.has(`${i.package_name}|${i.release_name}`)
+  );
   const completedDownloads = queue.filter((i: any) => i.status === 'completed');
+  const failedDownloads = queue.filter((i: any) => i.status === 'failed' || i.status === 'cancelled');
 
-  const totalItems = activeDownloads.length + pendingDownloads.length + completedDownloads.length;
+  const totalItems = activeDownloads.length + pendingDownloads.length + completedDownloads.length + failedDownloads.length;
   const subtitle = activeDownloads.length > 0
     ? `Downloading ${activeDownloads.length} item${activeDownloads.length > 1 ? 's' : ''}`
     : totalItems > 0
@@ -79,12 +119,14 @@ export default function DownloadsView() {
               <h3 className="download-section-header">Active</h3>
               {activeDownloads.map((item: any) => (
                 <DownloadItem
-                  key={item.package_name}
+                  key={`${item.package_name}-${item.release_name}`}
                   item={item}
-                  game={gameMap.get(item.package_name)}
+                  game={gameMap.get(`${item.package_name}|${item.release_name}`) || gameMap.get(item.package_name)}
                   onCancel={handleCancel}
                   onInstall={handleInstall}
-                  onRetry={() => {}}
+                  onRetry={handleRetry}
+                  onPause={handlePause}
+                  onResume={handleResume}
                 />
               ))}
             </div>
@@ -95,12 +137,32 @@ export default function DownloadsView() {
               <h3 className="download-section-header">Queued ({pendingDownloads.length})</h3>
               {pendingDownloads.map((item: any) => (
                 <DownloadItem
-                  key={item.package_name}
+                  key={`${item.package_name}-${item.release_name}`}
                   item={item}
-                  game={gameMap.get(item.package_name)}
+                  game={gameMap.get(`${item.package_name}|${item.release_name}`) || gameMap.get(item.package_name)}
                   onCancel={handleCancel}
                   onInstall={handleInstall}
-                  onRetry={() => {}}
+                  onRetry={handleRetry}
+                  onPause={handlePause}
+                  onResume={handleResume}
+                />
+              ))}
+            </div>
+          )}
+
+          {failedDownloads.length > 0 && (
+            <div className="download-section">
+              <h3 className="download-section-header">Failed / Cancelled</h3>
+              {failedDownloads.map((item: any) => (
+                <DownloadItem
+                  key={`${item.package_name}-${item.release_name}`}
+                  item={item}
+                  game={gameMap.get(`${item.package_name}|${item.release_name}`) || gameMap.get(item.package_name)}
+                  onCancel={handleCancel}
+                  onInstall={handleInstall}
+                  onRetry={handleRetry}
+                  onPause={handlePause}
+                  onResume={handleResume}
                 />
               ))}
             </div>
@@ -111,12 +173,14 @@ export default function DownloadsView() {
               <h3 className="download-section-header">Completed</h3>
               {completedDownloads.map((item: any) => (
                 <DownloadItem
-                  key={item.package_name}
+                  key={`${item.package_name}-${item.release_name}`}
                   item={item}
-                  game={gameMap.get(item.package_name)}
+                  game={gameMap.get(`${item.package_name}|${item.release_name}`) || gameMap.get(item.package_name)}
                   onCancel={handleCancel}
                   onInstall={handleInstall}
-                  onRetry={() => {}}
+                  onRetry={handleRetry}
+                  onPause={handlePause}
+                  onResume={handleResume}
                 />
               ))}
             </div>

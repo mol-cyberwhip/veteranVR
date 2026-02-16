@@ -5,6 +5,7 @@ import {
   assertDownloadQueueStatus,
   assertInstallStatusResult
 } from "../lib/contract";
+import { commands } from "../bindings";
 
 const invoke = async (cmd: string, args?: any) => {
   if (!window.__TAURI__ || !window.__TAURI__.core) {
@@ -21,9 +22,10 @@ export const api = {
     return payload; 
   },
   
-  getDeviceState: async (refresh = true) => {
-    const payload = await invoke("backend_device_state", { refresh });
-    return assertDeviceStateSnapshot(payload);
+  getDeviceState: async () => {
+    const result = await commands.backendDeviceState();
+    if (result.status === "error") throw new Error(result.error);
+    return assertDeviceStateSnapshot(result.data);
   },
 
   getCatalogStatus: async () => {
@@ -36,8 +38,8 @@ export const api = {
     return assertCatalogStatusSnapshot(payload);
   },
 
-  syncCatalog: async () => {
-    const payload = await invoke("backend_catalog_sync");
+  syncCatalog: async (force = true) => {
+    const payload = await invoke("backend_catalog_sync", { force });
     return assertCatalogStatusSnapshot(payload);
   },
 
@@ -54,7 +56,9 @@ export const api = {
   },
 
   getThumbnailPath: async (packageName: string) => {
-    const payload = await invoke("backend_catalog_thumbnail_path", { packageName });
+    const result = await commands.backendCatalogThumbnailPath(packageName);
+    if (result.status === "error") throw new Error(result.error);
+    const payload = result.data;
     return {
         exists: !!payload?.thumbnail_exists,
         path: payload?.thumbnail_path ? String(payload.thumbnail_path) : ""
@@ -74,8 +78,9 @@ export const api = {
   },
 
   getInstalledApps: async () => {
-    const payload = await invoke("backend_installed_apps", { includeUpdateDetection: true });
-    return payload; 
+    const result = await commands.backendInstalledApps();
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
   },
 
   getInstallStatus: async () => {
@@ -103,17 +108,32 @@ export const api = {
   resumeDownload: async () => {
     return invoke("backend_download_resume");
   },
+
+  pauseItem: async (packageName: string) => {
+    return invoke("backend_download_pause_item", { packageName });
+  },
+
+  resumeItem: async (packageName: string) => {
+    return invoke("backend_download_resume_item", { packageName });
+  },
   
   cancelDownload: async (packageName: string) => {
     return invoke("backend_download_cancel", { packageName });
   },
 
-  installGame: async (packageName: string, releaseName?: string) => {
-    return invoke("backend_install_game", { packageName, releaseName });
+  installGame: async (packageName: string, releaseName: string | null = null) => {
+    const result = await commands.backendInstallGame(packageName, releaseName);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
   },
 
   uninstallGame: async (packageName: string, keepObb = false, keepData = false) => {
-    return invoke("backend_uninstall_game", { packageName, keepObb, keepData });
+    const result = await commands.backendUninstallGame(packageName, keepObb, keepData);
+    if (result.status === "error") throw new Error(result.error);
+    if (!result.data.uninstalled) {
+      throw new Error(result.data.message || "Uninstall failed");
+    }
+    return result.data;
   },
 
   backupApp: async (packageName: string, includeObb = true) => {

@@ -11,7 +11,8 @@ fn test_catalog_service_instantiation() {
 #[test]
 fn test_game_parsing_integration() {
     let content = "Header\nName;Rel;Pkg;1";
-    let games = CatalogService::parse_game_list_content(content);
+    let mut service = CatalogService::new();
+    let games = service.parse_game_list_content(content);
     assert_eq!(games.len(), 1);
     assert_eq!(games[0].game_name, "Name");
 }

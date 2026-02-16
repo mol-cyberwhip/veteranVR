@@ -368,6 +368,7 @@ pub struct InstalledApp {
     pub catalog_version_code: Option<String>,
     pub installed_version_code: Option<String>,
     pub size: Option<String>,
+    pub update_available: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]

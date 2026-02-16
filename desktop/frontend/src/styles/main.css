@@ -1405,6 +1405,20 @@
       }
 
       /* Installed apps list */
+      .installed-section-title {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-2);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 14px 0 8px 4px;
+        opacity: 0.85;
+      }
+      .installed-size-tag {
+        color: rgba(220, 232, 255, 0.55);
+        font-weight: 500;
+        margin-left: 2px;
+      }
       .installed-list {
         display: flex;
         flex-direction: column;
@@ -1711,7 +1725,7 @@
       }
       .btn-installing {
         opacity: 0.85;
-        pointer-events: none;
+        cursor: not-allowed;
         display: inline-flex;
         align-items: center;
         gap: 0;

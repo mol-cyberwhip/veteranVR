@@ -79,12 +79,37 @@ Located in `frontend/`, the frontend is a modern React application:
     -   Launch the application window with HMR enabled.
 
 4.  **Update Type Bindings**:
-    If you modify IPC commands in Rust, update the TypeScript bindings by running tests in the backend:
+    The project uses [tauri-specta](https://github.com/oscartbeaumont/specta) to automatically generate TypeScript bindings from Rust code. **This does NOT happen automatically during `cargo build`** - you must manually regenerate after modifying Rust commands.
+    
+    To regenerate bindings:
     ```bash
     cd src-tauri
     cargo test generate_bindings
     ```
-    This will regenerate `src/bindings.ts` in the root (linked into the frontend).
+    This will regenerate `src/bindings.ts` (also copied to `frontend/src/bindings.ts`).
+    
+    **Important**: Always regenerate bindings when you:
+    - Add, remove, or rename IPC commands in `src/ipc/commands.rs`
+    - Change command argument types or return types
+    - Modify shared data structures in `src/models/`
+    
+    The generated bindings provide full type safety between Rust and TypeScript.
+
+## 📝 TypeScript Development
+
+The frontend uses TypeScript with Vite for fast development and type checking:
+
+-   **Type Checking**: Run `npx tsc --noEmit` in the `frontend/` directory to check types without emitting files
+-   **Development Server**: `npm run dev` starts the Vite dev server with HMR (Hot Module Replacement)
+-   **Build**: `npm run build` runs type checking (`tsc`) followed by the Vite build
+
+**Configuration** (`frontend/tsconfig.json`):
+-   Target: ES2020
+-   Module: ESNext with bundler resolution
+-   JSX: react-jsx transform
+-   Strict mode enabled
+-   Note: `noUnusedLocals` and `noUnusedParameters` are disabled to accommodate auto-generated bindings
+-   Path aliases: `@/*` → `./src/*`, `@bindings` → `./src/bindings.ts`
 
 ## 📂 Codebase Overview
 
@@ -112,10 +137,19 @@ Located in `frontend/`, the frontend is a modern React application:
 -   **Storage**: Application data (cache, settings, logs) is stored in `$HOME/.veteran/`.
 -   **Downloads**: Default download path is configurable in the application settings.
 
+## 🔨 Build Scripts
+
+For convenience, several build scripts are provided:
+
+-   **`./scripts/build.sh`**: Complete build pipeline that runs tests, regenerates bindings, builds the frontend, and builds the Tauri application.
+-   **`./scripts/build-all.sh`**: Cross-compilation script for building all platforms (macOS, Linux, Windows).
+-   **`./scripts/download-binaries.sh`**: Downloads sidecar binaries (adb, rclone, 7z) for production builds.
+
 ## 🤝 Contributing
 
 When adding new features:
 1.  Implement the logic in a new or existing service in `src-tauri/src/services/`.
 2.  Expose the service via a command in `src-tauri/src/ipc/commands.rs`.
-3.  Run `cargo test generate_bindings` to sync the frontend client.
-4.  Implement the UI component in `frontend/src/components/` and wire it up in `App.tsx` or its respective view.
+3.  Run `cargo test --lib generate_bindings` to sync the frontend client.
+4.  Copy the updated bindings: `cp src/bindings.ts frontend/src/bindings.ts`
+5.  Implement the UI component in `frontend/src/components/` and wire it up in `App.tsx` or its respective view.

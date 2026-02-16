@@ -106,9 +106,12 @@ impl RcloneService {
 
     async fn rc_post(&self, port: u16, endpoint: &str, body: Value) -> Result<Value> {
         let url = format!("http://127.0.0.1:{}/{}", port, endpoint);
+        logger::debug(&format!("[RCLONE] POST {} to {}", endpoint, url));
+        
         let response = self.http_client
             .post(&url)
             .json(&body)
+            .timeout(std::time::Duration::from_secs(60))
             .send()
             .await
             .context(format!("Failed to POST to {}", endpoint))?;
@@ -153,6 +156,15 @@ impl RcloneService {
             let _ = child.kill().await;
         }
 
+        // Kill any other rclone processes that might be lingering on our port or from previous runs
+        #[cfg(target_os = "macos")]
+        let _ = Command::new("pkill").arg("-f").arg("rclone rcd").spawn();
+        #[cfg(target_os = "windows")]
+        let _ = Command::new("taskkill").arg("/F").arg("/IM").arg("rclone.exe").arg("/T").spawn();
+        
+        // Give OS a moment to release ports
+        tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+
         // Find a free port and start the daemon
         let port = Self::find_free_port()?;
         logger::log(&format!("[RCLONE] Found free port: {}", port));
@@ -167,10 +179,6 @@ impl RcloneService {
             "--ask-password=false",
             "--config",
             "/dev/null",
-            "--tpslimit",
-            "1.0",
-            "--tpslimit-burst",
-            "3",
         ])
         .stdin(Stdio::null())
         .stdout(Stdio::piped())
@@ -227,6 +235,12 @@ impl RcloneService {
     }
 
     pub async fn shutdown(&self) -> Result<()> {
+        // Kill any local rclone processes first to be thorough
+        #[cfg(target_os = "macos")]
+        let _ = Command::new("pkill").arg("-f").arg("rclone rcd").spawn();
+        #[cfg(target_os = "windows")]
+        let _ = Command::new("taskkill").arg("/F").arg("/IM").arg("rclone.exe").arg("/T").spawn();
+
         // Try graceful shutdown via RC API
         let port = *self.rc_port.read().unwrap();
         if let Some(port) = port {
@@ -250,19 +264,52 @@ impl RcloneService {
         // Use the named remote "vrp" which was configured in ensure_daemon
         let src_fs = "vrp:meta.7z".to_string();
         logger::log(&format!("[RCLONE] sync_metadata from '{}'", src_fs));
+        logger::log(&format!("[RCLONE] download_dir: {}", download_dir.display()));
+        
+        // Ensure download directory exists
+        tokio::fs::create_dir_all(download_dir).await
+            .context(format!("Failed to create download directory: {}", download_dir.display()))?;
+        logger::log(&format!("[RCLONE] Ensured download directory exists"));
 
+        // Verify the remote is accessible by listing the root
+        logger::log(&format!("[RCLONE] Verifying remote 'vrp' is accessible..."));
+        let list_body = serde_json::json!({
+            "fs": "vrp:",
+            "remote": ""
+        });
+        match self.rc_post(port, "operations/list", list_body).await {
+            Ok(list_response) => {
+                let file_count = list_response.get("list")
+                    .and_then(|v| v.as_array())
+                    .map(|arr| arr.len())
+                    .unwrap_or(0);
+                logger::log(&format!("[RCLONE] Remote 'vrp' accessible, found {} items in root", file_count));
+            }
+            Err(e) => {
+                logger::log(&format!("[RCLONE] WARNING: Could not list remote 'vrp': {}", e));
+                // Continue anyway, as the file might still be accessible
+            }
+        }
+
+        // Synchronous completion is handled by passing _async: false or omitting it
+        // and we ensure we call operations/copyfile which is better for single files
         let body = serde_json::json!({
-            "srcFs": src_fs,
+            "srcFs": "vrp:",
+            "srcRemote": "meta.7z",
             "dstFs": download_dir.to_string_lossy().to_string(),
+            "dstRemote": "meta.7z",
+            "_async": true,
             "_config": {
                 "Inplace": true,
                 "SizeOnly": true
             }
         });
 
-        let response = self.rc_post(port, "sync/sync", body).await?;
+        logger::log(&format!("[RCLONE] Calling operations/copyfile with body: {}", body));
+        let response = self.rc_post(port, "operations/copyfile", body).await?;
+        logger::log(&format!("[RCLONE] operations/copyfile response: {}", response));
 
-        // Check for errors in the response
+        // Check for immediate errors in the response
         if let Some(error) = response.get("error") {
             if !error.is_null() {
                 return Ok(RcloneResult {
@@ -273,6 +320,62 @@ impl RcloneService {
             }
         }
 
+        // Check if we got a jobid (async operation)
+        if let Some(job_id) = response.get("jobid").and_then(|v| v.as_u64()) {
+            logger::log(&format!("[RCLONE] Metadata sync started as job {}", job_id));
+            
+            // Poll for completion with a 5-minute timeout
+            let start_time = std::time::Instant::now();
+            let timeout = std::time::Duration::from_secs(300);
+            
+            loop {
+                if start_time.elapsed() > timeout {
+                    logger::log(&format!("[RCLONE] ERROR: Job {} timed out after 5 minutes", job_id));
+                    return Ok(RcloneResult {
+                        stdout: String::new(),
+                        stderr: "Metadata sync timed out".to_string(),
+                        returncode: 1,
+                    });
+                }
+                
+                tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+                
+                let status_body = serde_json::json!({ "jobid": job_id });
+                match self.rc_post(port, "job/status", status_body).await {
+                    Ok(status) => {
+                        let finished = status.get("finished").and_then(|v| v.as_bool()).unwrap_or(false);
+                        logger::log(&format!("[RCLONE] Job {} status: finished={}", job_id, finished));
+                        
+                        if finished {
+                            let success = status.get("success").and_then(|v| v.as_bool()).unwrap_or(false);
+                            let error = status.get("error").and_then(|v| v.as_str()).unwrap_or("");
+                            
+                            if success {
+                                logger::log(&format!("[RCLONE] Metadata sync job {} completed successfully", job_id));
+                                return Ok(RcloneResult {
+                                    stdout: status.to_string(),
+                                    stderr: String::new(),
+                                    returncode: 0,
+                                });
+                            } else {
+                                logger::log(&format!("[RCLONE] Metadata sync job {} failed: {}", job_id, error));
+                                return Ok(RcloneResult {
+                                    stdout: String::new(),
+                                    stderr: error.to_string(),
+                                    returncode: 1,
+                                });
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        logger::log(&format!("[RCLONE] ERROR getting job {} status: {}", job_id, e));
+                        // Continue polling even if one status check fails
+                    }
+                }
+            }
+        }
+
+        // Synchronous completion
         Ok(RcloneResult {
             stdout: response.to_string(),
             stderr: String::new(),
@@ -453,6 +556,22 @@ impl RcloneService {
             let _ = self.rc_post(port, "job/stop", body).await;
         }
 
+        Ok(())
+    }
+
+    pub async fn stop_download(&self, game_hash: &str) -> Result<()> {
+        let jobs = self.active_jobs.lock().await;
+        let job_id = jobs.get(game_hash);
+        
+        if let Some(&id) = job_id {
+            // Drop lock before await
+            let id = id;
+            drop(jobs);
+            
+            let port = self.ensure_daemon().await?;
+            let body = serde_json::json!({ "jobid": id });
+            let _ = self.rc_post(port, "job/stop", body).await;
+        }
         Ok(())
     }
 

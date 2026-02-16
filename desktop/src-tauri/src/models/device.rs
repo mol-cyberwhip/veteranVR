@@ -1,7 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default, specta::Type)]
-pub struct DeviceInfo {
+/// Internal device representation from ADB
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+pub struct RawDeviceInfo {
     pub serial: String,
     pub state: String,
     #[serde(default)]
@@ -10,7 +11,7 @@ pub struct DeviceInfo {
     pub product: String,
 }
 
-impl DeviceInfo {
+impl RawDeviceInfo {
     pub fn is_connected(&self) -> bool {
         self.state == "device"
     }
@@ -22,14 +23,14 @@ mod tests {
 
     #[test]
     fn test_is_connected() {
-        let device = DeviceInfo {
+        let device = RawDeviceInfo {
             serial: "123".into(),
             state: "device".into(),
             ..Default::default()
         };
         assert!(device.is_connected());
 
-        let offline = DeviceInfo {
+        let offline = RawDeviceInfo {
             serial: "123".into(),
             state: "offline".into(),
             ..Default::default()

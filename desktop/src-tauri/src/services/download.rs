@@ -12,6 +12,7 @@ use uuid::Uuid;
 pub enum DownloadStatus {
     Queued,
     Downloading,
+    Paused,
     Completed,
     Failed,
     Cancelled,
@@ -168,6 +169,39 @@ impl DownloadService {
         Ok(false)
     }
 
+    pub async fn pause_item(&self, package_name: &str) -> Result<bool> {
+        let mut queue = self.queue.write().await;
+        if let Some(item) = queue
+            .iter_mut()
+            .find(|item| item.game.package_name == package_name)
+        {
+            if item.status == DownloadStatus::Downloading {
+                item.status = DownloadStatus::Paused;
+                let hash = item.game_hash();
+                drop(queue);
+                self.rclone.stop_download(&hash).await?;
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
+    pub async fn resume_item(&self, package_name: &str) -> Result<bool> {
+        let mut queue = self.queue.write().await;
+        if let Some(item) = queue
+            .iter_mut()
+            .find(|item| item.game.package_name == package_name)
+        {
+            if item.status == DownloadStatus::Paused || item.status == DownloadStatus::Failed || item.status == DownloadStatus::Cancelled {
+                item.status = DownloadStatus::Queued;
+                drop(queue);
+                self.process_queue().await?;
+                return Ok(true);
+            }
+        }
+        Ok(false)
+    }
+
     pub async fn process_queue(&self) -> Result<()> {
         // Check if already processing
         {
@@ -285,6 +319,9 @@ impl DownloadService {
                 if item.status == DownloadStatus::Cancelled {
                     return;
                 }
+                if item.status == DownloadStatus::Paused {
+                    return;
+                }
 
                 match result {
                     Ok(download_result) if download_result.success() => {
@@ -393,6 +430,10 @@ impl DownloadService {
                         let mut queue = queue.write().await;
                         if let Some(qitem) = queue.iter_mut().find(|i| i.game.package_name == item.game.package_name) {
                             if qitem.status == DownloadStatus::Cancelled {
+                                on_update(qitem.clone()).await;
+                                continue;
+                            }
+                            if qitem.status == DownloadStatus::Paused {
                                 on_update(qitem.clone()).await;
                                 continue;
                             }
