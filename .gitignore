@@ -24,7 +24,9 @@ build/
 *.log
 
 # Tauri/Rust
+desktop/target/
 desktop/src-tauri/target/
+desktop/gen/
 desktop/src-tauri/gen/
 
 # Dependency managers
