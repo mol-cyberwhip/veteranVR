@@ -1,26 +1,29 @@
 use std::path::PathBuf;
 use std::sync::OnceLock;
 
-static RESOURCE_DIR: OnceLock<PathBuf> = OnceLock::new();
+static BINARY_DIR: OnceLock<PathBuf> = OnceLock::new();
 
-/// Initialize the binary paths module with the app's resource directory.
+/// Initialize the binary paths module with the app's binary directory.
 /// Must be called during app setup before any binary resolution.
 pub fn init(app_handle: &tauri::AppHandle) {
     use tauri::Manager;
-    if let Ok(dir) = app_handle.path().resource_dir() {
-        let _ = RESOURCE_DIR.set(dir);
+    // Tauri sidecar binaries are extracted to the same directory as the main executable
+    // On macOS: Contents/MacOS/
+    // On Linux/Windows: same directory as the app binary
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(bin_dir) = exe_path.parent() {
+            let _ = BINARY_DIR.set(bin_dir.to_path_buf());
+        }
     }
 }
 
 fn resolve(name: &str) -> PathBuf {
-    if let Some(dir) = RESOURCE_DIR.get() {
-        let candidate = dir.join(name);
-        // Only use the bundled binary if it exists and is a real binary (not a 0-byte stub).
-        // During dev builds, empty placeholder files are used to satisfy Tauri's build check,
-        // so we fall through to the system PATH in that case.
+    // First, check if the binary exists in the bundled location
+    if let Some(bin_dir) = BINARY_DIR.get() {
+        let candidate = bin_dir.join(name);
         let is_real = candidate
             .metadata()
-            .map(|m| m.len() > 0)
+            .map(|m| m.is_file() && m.len() > 0)
             .unwrap_or(false);
         if is_real {
             return candidate;
