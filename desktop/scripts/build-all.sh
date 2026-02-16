@@ -249,6 +249,8 @@ for alias in "${REQUESTED[@]}"; do
         # Copy artifacts to dist/
         step "Collecting artifacts..."
         ARTIFACT_DIR="$DIST_DIR/$alias"
+        # Clean existing artifacts for this target to avoid stale bundles (like the old Rookie Desktop.app)
+        rm -rf "$ARTIFACT_DIR"
         mkdir -p "$ARTIFACT_DIR"
 
         BUNDLE_DIR="$PROJECT_DIR/src-tauri/target/${triple}/release/bundle"
