@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rookie Desktop — Installed Apps</title>
+  <link rel="stylesheet" href="design-tokens.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: var(--titlebar-height) var(--toolbar-height) 1fr var(--statusbar-height);
+      height: 100vh; overflow: hidden;
+    }
+    .titlebar { grid-column:1/-1; background:var(--bg-1); display:flex; align-items:center; padding:0 var(--sp-4); border-bottom:1px solid var(--border-subtle); }
+    .titlebar-traffic-lights { display:flex; gap:8px; margin-right:var(--sp-6); }
+    .traffic-light { width:12px; height:12px; border-radius:50%; }
+    .tl-close { background:#ff5f57; } .tl-minimize { background:#febc2e; } .tl-maximize { background:#28c840; }
+    .titlebar-title { flex:1; text-align:center; font-size:var(--text-sm); font-weight:var(--weight-semibold); color:var(--text-secondary); }
+    .titlebar-device { display:flex; align-items:center; gap:var(--sp-2); font-size:var(--text-sm); color:var(--text-secondary); }
+    .sidebar { grid-row:2/5; background:var(--bg-1); border-right:1px solid var(--border-subtle); display:flex; flex-direction:column; padding:var(--sp-3); overflow-y:auto; }
+    .sidebar-section { margin-bottom:var(--sp-1); }
+    .sidebar-label { font-size:var(--text-xs); font-weight:var(--weight-semibold); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; padding:var(--sp-2) var(--sp-4); }
+    .toolbar { background:var(--bg-2); display:flex; align-items:center; padding:0 var(--sp-5); border-bottom:1px solid var(--border-subtle); gap:var(--sp-3); }
+    .statusbar { grid-column:1/-1; background:var(--bg-1); display:flex; align-items:center; padding:0 var(--sp-5); border-top:1px solid var(--border-subtle); font-size:var(--text-sm); color:var(--text-muted); }
+
+    .main { background:var(--bg-2); overflow-y:auto; padding:var(--sp-5); }
+
+    /* ── Installed app rows ── */
+    .installed-list {
+      display: flex; flex-direction: column;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .installed-item {
+      display: flex; align-items: center; gap: var(--sp-4);
+      padding: var(--sp-4) var(--sp-5);
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background var(--duration-fast);
+    }
+    .installed-item:last-child { border-bottom: none; }
+    .installed-item:hover { background: var(--bg-4); }
+
+    .installed-thumb {
+      width: 48px; height: 48px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-sm); color: rgba(255,255,255,0.5); flex-shrink: 0;
+    }
+
+    .installed-info { flex: 1; }
+    .installed-name { font-size: var(--text-md); font-weight: var(--weight-semibold); margin-bottom: 2px; }
+    .installed-package { font-size: var(--text-xs); color: var(--text-muted); font-family: var(--font-mono); }
+
+    .installed-version { text-align: right; min-width: 80px; }
+    .installed-version-num { font-size: var(--text-base); font-weight: var(--weight-medium); }
+    .installed-size { font-size: var(--text-sm); color: var(--text-muted); }
+
+    .installed-status { min-width: 100px; }
+
+    .installed-actions { display: flex; gap: var(--sp-2); }
+
+    /* Summary bar */
+    .installed-summary {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--sp-3) var(--sp-5);
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--sp-4);
+      font-size: var(--text-sm);
+    }
+    .installed-summary-stat { display: flex; align-items: center; gap: var(--sp-2); }
+    .installed-summary-stat strong { color: var(--text-primary); font-size: var(--text-md); }
+
+    /* ── Uninstall confirm dialog ── */
+    .dialog-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: var(--z-modal);
+    }
+    .dialog {
+      width: 420px; background: var(--bg-3);
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-modal);
+      padding: var(--sp-6);
+    }
+    .dialog-title { font-size: var(--text-lg); font-weight: var(--weight-bold); margin-bottom: var(--sp-4); }
+    .dialog-body { margin-bottom: var(--sp-5); }
+    .dialog-checkbox { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); cursor: pointer; }
+    .dialog-checkbox-box {
+      width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 4px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .dialog-checkbox-box.checked { background: var(--accent); border-color: var(--accent); color: #fff; font-size: 11px; }
+    .dialog-warning {
+      display: flex; align-items: flex-start; gap: var(--sp-2);
+      padding: var(--sp-3); background: var(--warning-muted);
+      border: 1px solid rgba(251,191,36,0.2); border-radius: var(--radius-md);
+      font-size: var(--text-sm); color: var(--warning); margin-top: var(--sp-3);
+    }
+    .dialog-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="titlebar">
+      <div class="titlebar-traffic-lights"><span class="traffic-light tl-close"></span><span class="traffic-light tl-minimize"></span><span class="traffic-light tl-maximize"></span></div>
+      <span class="titlebar-title">Rookie Desktop</span>
+      <div class="titlebar-device"><span class="status-dot status-dot-connected"></span> Quest 3 &middot; 72%</div>
+    </header>
+
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Browse</div>
+        <a class="nav-item"><span class="nav-icon">&#x1F4DA;</span> Library</a>
+        <a class="nav-item"><span class="nav-icon">&#x2B07;&#xFE0F;</span> Downloads</a>
+        <a class="nav-item active"><span class="nav-icon">&#x1F4E6;</span> Installed</a>
+      </div>
+      <div class="divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Device</div>
+        <a class="nav-item"><span class="nav-icon">&#x1F4F1;</span> Quest Info</a>
+        <a class="nav-item"><span class="nav-icon">&#x1F50C;</span> Wireless ADB</a>
+      </div>
+      <div class="divider"></div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Collections</div>
+        <a class="nav-item"><span class="nav-icon">&#x2B50;</span> Favorites</a>
+        <a class="nav-item"><span class="nav-icon">&#x2728;</span> New Releases</a>
+      </div>
+      <div class="divider"></div>
+      <div class="sidebar-section" style="margin-top:auto;">
+        <a class="nav-item"><span class="nav-icon">&#x2699;&#xFE0F;</span> Settings</a>
+        <a class="nav-item"><span class="nav-icon">&#x1F4CB;</span> Logs</a>
+      </div>
+    </nav>
+
+    <div class="toolbar">
+      <span style="font-size: var(--text-lg); font-weight: var(--weight-bold);">Installed Apps</span>
+      <div class="search-wrapper" style="flex: 0 1 300px; margin-left: var(--sp-4);">
+        <div class="input-with-icon">
+          <span class="input-icon">&#x1F50D;</span>
+          <input class="input" type="text" placeholder="Filter installed..." />
+        </div>
+      </div>
+      <span style="margin-left: auto;" class="text-sm text-muted">47 apps</span>
+      <button class="btn btn-secondary btn-sm">&#x21BB; Refresh</button>
+    </div>
+
+    <main class="main">
+      <!-- Summary -->
+      <div class="installed-summary">
+        <div class="installed-summary-stat">
+          <span class="text-muted">Total apps:</span> <strong>47</strong>
+        </div>
+        <div class="installed-summary-stat">
+          <span class="text-muted">Total size:</span> <strong>42.7 GB</strong>
+        </div>
+        <div class="installed-summary-stat">
+          <span class="text-muted">Updates:</span> <strong style="color: var(--accent);">3 available</strong>
+        </div>
+        <button class="btn btn-primary btn-sm">Update All (3)</button>
+      </div>
+
+      <!-- List -->
+      <div class="installed-list">
+        <div class="installed-item">
+          <div class="installed-thumb" style="background: linear-gradient(135deg, #1a2a4a, #2d4a7c);">BS</div>
+          <div class="installed-info">
+            <div class="installed-name">Beat Saber</div>
+            <div class="installed-package">com.beatgames.beatsaber</div>
+          </div>
+          <div class="installed-version">
+            <div class="installed-version-num">v1.37.0</div>
+            <div class="installed-size">2.1 GB</div>
+          </div>
+          <div class="installed-status">
+            <span class="badge badge-update">&#x2191; v1.38.0</span>
+          </div>
+          <div class="installed-actions">
+            <button class="btn btn-primary btn-sm">Update</button>
+            <button class="btn btn-secondary btn-sm">Backup</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);">Uninstall</button>
+          </div>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-thumb" style="background: linear-gradient(135deg, #3a1a4a, #6a2d7c);">SH</div>
+          <div class="installed-info">
+            <div class="installed-name">Superhot VR</div>
+            <div class="installed-package">com.superhot.superhot</div>
+          </div>
+          <div class="installed-version">
+            <div class="installed-version-num">v1.0.22</div>
+            <div class="installed-size">1.8 GB</div>
+          </div>
+          <div class="installed-status">
+            <span class="badge badge-installed">&#x2713; Latest</span>
+          </div>
+          <div class="installed-actions">
+            <button class="btn btn-secondary btn-sm">Backup</button>
+            <button class="btn btn-secondary btn-sm">Extract APK</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);">Uninstall</button>
+          </div>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-thumb" style="background: linear-gradient(135deg, #1a4a2a, #2d7c4a);">GT</div>
+          <div class="installed-info">
+            <div class="installed-name">Gorilla Tag</div>
+            <div class="installed-package">com.anothertag.gorillatag</div>
+          </div>
+          <div class="installed-version">
+            <div class="installed-version-num">v1.1.85</div>
+            <div class="installed-size">850 MB</div>
+          </div>
+          <div class="installed-status">
+            <span class="badge badge-installed">&#x2713; Latest</span>
+          </div>
+          <div class="installed-actions">
+            <button class="btn btn-secondary btn-sm">Backup</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);">Uninstall</button>
+          </div>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-thumb" style="background: linear-gradient(135deg, #4a1a1a, #7c2d2d);">BL</div>
+          <div class="installed-info">
+            <div class="installed-name">BONELAB</div>
+            <div class="installed-package">com.stresslevelzero.bonelab</div>
+          </div>
+          <div class="installed-version">
+            <div class="installed-version-num">v1.7.0</div>
+            <div class="installed-size">6.7 GB</div>
+          </div>
+          <div class="installed-status">
+            <span class="badge badge-update">&#x2191; v1.8.0</span>
+          </div>
+          <div class="installed-actions">
+            <button class="btn btn-primary btn-sm">Update</button>
+            <button class="btn btn-secondary btn-sm">Backup</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);">Uninstall</button>
+          </div>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-thumb" style="background: linear-gradient(135deg, #2a1a4a, #4a2d7c);">WG</div>
+          <div class="installed-info">
+            <div class="installed-name">Walkabout Mini Golf</div>
+            <div class="installed-package">com.mightycoco.walkabout</div>
+          </div>
+          <div class="installed-version">
+            <div class="installed-version-num">v5.2.0</div>
+            <div class="installed-size">1.5 GB</div>
+          </div>
+          <div class="installed-status">
+            <span class="badge badge-installed">&#x2713; Latest</span>
+          </div>
+          <div class="installed-actions">
+            <button class="btn btn-secondary btn-sm">Backup</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);">Uninstall</button>
+          </div>
+        </div>
+
+        <div class="installed-item">
+          <div class="installed-thumb" style="background: linear-gradient(135deg, #4a3a1a, #7c5a2d);">PO</div>
+          <div class="installed-info">
+            <div class="installed-name">Population: One</div>
+            <div class="installed-package">com.bigboxvr.populationone</div>
+          </div>
+          <div class="installed-version">
+            <div class="installed-version-num">v3.1.0</div>
+            <div class="installed-size">4.1 GB</div>
+          </div>
+          <div class="installed-status">
+            <span class="badge badge-update">&#x2191; v3.2.1</span>
+          </div>
+          <div class="installed-actions">
+            <button class="btn btn-primary btn-sm">Update</button>
+            <button class="btn btn-secondary btn-sm">Backup</button>
+            <button class="btn btn-ghost btn-sm" style="color: var(--error);">Uninstall</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="statusbar">
+      <span>47 installed apps &middot; 42.7 GB total &middot; 3 updates available &middot; 59.8 GB free</span>
+    </footer>
+  </div>
+
+  <!-- ═══ Uninstall Confirmation Dialog ═══ -->
+  <div class="dialog-overlay">
+    <div class="dialog">
+      <div class="dialog-title">Uninstall Beat Saber?</div>
+      <div class="dialog-body">
+        <div class="dialog-checkbox">
+          <div class="dialog-checkbox-box"></div>
+          <span>Also remove OBB data</span>
+        </div>
+        <div class="dialog-checkbox">
+          <div class="dialog-checkbox-box"></div>
+          <span>Also remove save data</span>
+        </div>
+        <div class="dialog-warning">
+          <span>&#x26A0;&#xFE0F;</span>
+          <span>Save data will be permanently lost unless you create a backup first.</span>
+        </div>
+      </div>
+      <div class="dialog-actions">
+        <button class="btn btn-primary btn-sm">Backup First</button>
+        <button class="btn btn-secondary btn-sm">Cancel</button>
+        <button class="btn btn-danger btn-sm">Remove</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

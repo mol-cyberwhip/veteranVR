@@ -1,0 +1,46 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Veteran Desktop",
+  "version": "0.1.0",
+  "identifier": "com.vrpirates.veteran.desktop",
+  "build": {
+    "frontendDist": "../frontend/dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "kill -9 $(lsof -ti:1420) 2>/dev/null || true; npm run dev --prefix ../frontend",
+    "beforeBuildCommand": "npm run build --prefix ../frontend"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Veteran Desktop",
+        "width": 1120,
+        "height": 760,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$HOME/.veteran/cache/thumbnails/**",
+          "$HOME/.veteran/cache/notes/**",
+          "$HOME/.veteran/cache/**"
+        ]
+      },
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "externalBin": [
+      "binaries/adb",
+      "binaries/rclone",
+      "binaries/7z"
+    ],
+    "icon": [
+      "icons/icon.icns",
+      "icons/icon.png"
+    ]
+  }
+}

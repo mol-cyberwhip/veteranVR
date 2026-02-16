@@ -1,0 +1,89 @@
+name: Test Matrix
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  desktop-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Run desktop guardrails
+        run: python -m pytest tests/test_tauri_bootstrap_scaffold.py tests/test_rclone_service.py -q -ra
+
+  fast:
+    runs-on: ubuntu-latest
+    needs: desktop-guards
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Run fast tier
+        run: python scripts/run_test_matrix.py --tier fast
+
+  desktop-e2e:
+    runs-on: ubuntu-latest
+    needs: fast
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Run desktop E2E tier
+        run: python scripts/run_test_matrix.py --tier desktop_e2e
+
+  network:
+    runs-on: ubuntu-latest
+    needs: fast
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Run network tier
+        run: python scripts/run_test_matrix.py --tier network
+
+  device:
+    runs-on: ubuntu-latest
+    needs: fast
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Validate device marker gate (collect-only)
+        run: python scripts/run_test_matrix.py --tier device --collect-only
+      - name: Run device tier (optional)
+        if: ${{ vars.ENABLE_DEVICE_TESTS == '1' }}
+        run: python scripts/run_test_matrix.py --tier device

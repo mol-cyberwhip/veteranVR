@@ -1,0 +1,71 @@
+
+src/components/views/Backups.tsx:1:8 - error TS6133: 'React' is declared but its value is never read.
+
+1 import React, { useState, useEffect } from 'react';
+         ~~~~~
+
+src/components/views/Downloads.tsx:1:8 - error TS6133: 'React' is declared but its value is never read.
+
+1 import React, { useState } from 'react';
+         ~~~~~
+
+src/components/views/Installed.tsx:1:8 - error TS6133: 'React' is declared but its value is never read.
+
+1 import React, { useState } from 'react';
+         ~~~~~
+
+src/components/views/Library.tsx:1:8 - error TS6133: 'React' is declared but its value is never read.
+
+1 import React, { useState, useEffect } from 'react';
+         ~~~~~
+
+src/services/api.ts:68:33 - error TS2339: Property [200~milanleonard@Milans-Laptop desktop % cargo clean && ./scripts/build-all.sh
+error: could not find `Cargo.toml` in `/Users/milanleonard/Projects/VRPRookieCloneWorking/desktop` or any parent directory
+milanleonard@Milans-Laptop desktop % milanleonard@Milans-Laptop desktop % milanleonard@Milancripts/build-all.sh
+error: could not find `Cargo.toml` in `/Users/milanleonard/Projects/VRPRookieCloneWorking/desktop` or any parent directorymilanleonard@Milans-Laptop desktop % milanleonard@Milans-Laptop desktop % cargo clean && ./scripts/build-all.sh
+error: could not find `Cargo.toml` in `/Users/milanleonard/Projects/VRPRookieCloneWorking/desktop` or any parent directory
+
+milanleonard@Milans-Laptop desktop % ./scripts/build-all.sh
+==> Building frontend...
+
+> rookie'convertFileSrc' does not exist on type '{ invoke: (cmd: string, args?: any) => Promise<any>; }'.
+
+68     if (window.__TAURI__?.core?.convertFileSrc) {
+                                   ~~~~~~~~~~~~~~
+
+src/services/api.ts:69:38 - error TS2339: Property 'convertFileSrc' does not exist on type '{ invoke: (cmd: string, args?: any) => Promise<any>; }'.
+
+69         return window.__TAURI__.core.convertFileSrc(path);
+                                        ~~~~~~~~~~~~~~
+
+src/test/mock-tauri.ts:5:9 - error TS2717: Subsequent property declarations must have the same type.  Property '__TAURI__' must be of type '{ core: { invoke: (cmd: string, args?: any) => Promise<any>; }; }', but here has type '{ core: { invoke: (cmd: string, args?: any) => Promise<any>; convertFileSrc: (path: string) => string; }; }'.
+
+5         __TAURI__: {
+          ~~~~~~~~~
+
+  src/vite-env.d.ts:4:3
+    4   __TAURI__: {
+        ~~~~~~~~~
+    '__TAURI__' was also declared here.
+
+src/test/mock-tauri.ts:148:17 - error TS2353: Object literal may only specify known properties, and 'convertFileSrc' does not exist in type '{ invoke: (cmd: string, args?: any) => Promise<any>; }'.
+
+148                 convertFileSrc: (path: string) => `asset://${path}`
+                    ~~~~~~~~~~~~~~
+
+  src/vite-env.d.ts:5:5
+    5     core: {
+          ~~~~
+    The expected type comes from property 'core' which is declared here on type '{ core: { invoke: (cmd: string, args?: any) => Promise<any>; }; }'
+
+
+Found 8 errors in 6 files.
+
+Errors  Files
+     1  src/components/views/Backups.tsx:1
+     1  src/components/views/Downloads.tsx:1
+     1  src/components/views/Installed.tsx:1
+     1  src/components/views/Library.tsx:1
+     2  src/services/api.ts:68
+     2  src/test/mock-tauri.ts:5
+milanleonard@Milans-Laptop deskto[201~clear
