@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rookie Desktop — Library Grid</title>
+  <link rel="stylesheet" href="design-tokens.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    /* ── App Shell ────────────────────────────────────────── */
+    .app {
+      display: grid;
+      grid-template-columns: var(--sidebar-width) 1fr;
+      grid-template-rows: var(--titlebar-height) var(--toolbar-height) 1fr var(--statusbar-height);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Title Bar ────────────────────────────────────────── */
+    .titlebar {
+      grid-column: 1 / -1;
+      background: var(--bg-1);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-4);
+      border-bottom: 1px solid var(--border-subtle);
+      -webkit-app-region: drag;
+      user-select: none;
+    }
+
+    .titlebar-traffic-lights {
+      display: flex;
+      gap: 8px;
+      margin-right: var(--sp-6);
+    }
+    .traffic-light {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    .tl-close { background: #ff5f57; }
+    .tl-minimize { background: #febc2e; }
+    .tl-maximize { background: #28c840; }
+
+    .titlebar-title {
+      flex: 1;
+      text-align: center;
+      font-size: var(--text-sm);
+      font-weight: var(--weight-semibold);
+      color: var(--text-secondary);
+    }
+
+    .titlebar-device {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-2);
+      font-size: var(--text-sm);
+      font-weight: var(--weight-medium);
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px 10px;
+      border-radius: var(--radius-sm);
+      transition: background var(--duration-fast);
+      -webkit-app-region: no-drag;
+    }
+    .titlebar-device:hover { background: var(--bg-4); }
+
+    /* ── Sidebar ──────────────────────────────────────────── */
+    .sidebar {
+      grid-row: 2 / 5;
+      background: var(--bg-1);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      padding: var(--sp-3);
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      margin-bottom: var(--sp-1);
+    }
+
+    .sidebar-label {
+      font-size: var(--text-xs);
+      font-weight: var(--weight-semibold);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: var(--sp-2) var(--sp-4);
+    }
+
+    /* ── Toolbar ──────────────────────────────────────────── */
+    .toolbar {
+      background: var(--bg-2);
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      padding: 0 var(--sp-5);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .search-wrapper {
+      flex: 1;
+      max-width: 480px;
+    }
+
+    .toolbar-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      margin-left: auto;
+    }
+
+    /* ── Main Content ─────────────────────────────────────── */
+    .main {
+      background: var(--bg-2);
+      overflow-y: auto;
+      padding: var(--sp-5);
+    }
+
+    /* ── Game Grid ─────────────────────────────────────────── */
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+      gap: var(--sp-4);
+    }
+
+    /* ── Status Bar ───────────────────────────────────────── */
+    .statusbar {
+      background: var(--bg-1);
+      display: flex;
+      align-items: center;
+      padding: 0 var(--sp-5);
+      gap: var(--sp-4);
+      border-top: 1px solid var(--border-subtle);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+
+    .statusbar-progress-section {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      flex: 1;
+    }
+
+    .statusbar-progress-track {
+      width: 200px;
+      height: 6px;
+      background: var(--bg-3);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+
+    .statusbar-progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: var(--radius-pill);
+      position: relative;
+    }
+
+    .statusbar-progress-fill::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    .statusbar-right {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+    }
+
+    /* ── Sample game art gradient placeholders ────────────── */
+    .placeholder-1 { background: linear-gradient(135deg, #1a2a4a, #2d4a7c, #1a4050); }
+    .placeholder-2 { background: linear-gradient(135deg, #3a1a4a, #6a2d7c, #401a50); }
+    .placeholder-3 { background: linear-gradient(135deg, #4a1a1a, #7c2d2d, #503a1a); }
+    .placeholder-4 { background: linear-gradient(135deg, #1a4a2a, #2d7c4a, #1a5040); }
+    .placeholder-5 { background: linear-gradient(135deg, #4a3a1a, #7c5a2d, #504a1a); }
+    .placeholder-6 { background: linear-gradient(135deg, #1a3a4a, #2d5a7c, #1a4a50); }
+    .placeholder-7 { background: linear-gradient(135deg, #2a1a4a, #4a2d7c, #301a50); }
+    .placeholder-8 { background: linear-gradient(135deg, #1a4a4a, #2d7c7c, #1a5050); }
+    .placeholder-9 { background: linear-gradient(135deg, #4a4a1a, #7c7c2d, #50501a); }
+    .placeholder-10 { background: linear-gradient(135deg, #4a1a3a, #7c2d5a, #501a40); }
+    .placeholder-11 { background: linear-gradient(135deg, #1a2a3a, #2d4a5a, #1a3a4a); }
+    .placeholder-12 { background: linear-gradient(135deg, #3a3a1a, #5a5a2d, #4a4a1a); }
+
+    .game-card-thumb-placeholder {
+      font-weight: var(--weight-semibold);
+      font-size: var(--text-md);
+      color: rgba(255,255,255,0.5);
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+
+    <!-- ═══ Title Bar ═══ -->
+    <header class="titlebar">
+      <div class="titlebar-traffic-lights">
+        <span class="traffic-light tl-close"></span>
+        <span class="traffic-light tl-minimize"></span>
+        <span class="traffic-light tl-maximize"></span>
+      </div>
+      <span class="titlebar-title">Rookie Desktop</span>
+      <div class="titlebar-device">
+        <span class="status-dot status-dot-connected"></span>
+        Quest 3 &middot; 72%&nbsp;&#x1F50B;
+      </div>
+    </header>
+
+    <!-- ═══ Sidebar ═══ -->
+    <nav class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Browse</div>
+        <a class="nav-item active">
+          <span class="nav-icon">&#x1F4DA;</span> Library
+        </a>
+        <a class="nav-item">
+          <span class="nav-icon">&#x2B07;&#xFE0F;</span> Downloads
+          <span class="nav-badge">3</span>
+        </a>
+        <a class="nav-item">
+          <span class="nav-icon">&#x1F4E6;</span> Installed
+        </a>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Device</div>
+        <a class="nav-item">
+          <span class="nav-icon">&#x1F4F1;</span> Quest Info
+        </a>
+        <a class="nav-item">
+          <span class="nav-icon">&#x1F50C;</span> Wireless ADB
+        </a>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sidebar-section">
+        <div class="sidebar-label">Collections</div>
+        <a class="nav-item">
+          <span class="nav-icon">&#x2B50;</span> Favorites
+        </a>
+        <a class="nav-item">
+          <span class="nav-icon">&#x2728;</span> New Releases
+        </a>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sidebar-section" style="margin-top: auto;">
+        <a class="nav-item">
+          <span class="nav-icon">&#x2699;&#xFE0F;</span> Settings
+        </a>
+        <a class="nav-item">
+          <span class="nav-icon">&#x1F4CB;</span> Logs
+        </a>
+      </div>
+    </nav>
+
+    <!-- ═══ Toolbar ═══ -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <div class="input-with-icon">
+          <span class="input-icon">&#x1F50D;</span>
+          <input class="input" type="text" placeholder="Search 2,547 games..." />
+        </div>
+      </div>
+      <div class="toolbar-controls">
+        <select class="select">
+          <option>Popularity</option>
+          <option>Name</option>
+          <option>Date Added</option>
+          <option>Size</option>
+        </select>
+        <div class="toggle-group">
+          <button class="toggle-group-btn active" title="Grid view">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          </button>
+          <button class="toggle-group-btn" title="List view">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="2.5" rx="1"/><rect x="1" y="6.75" width="14" height="2.5" rx="1"/><rect x="1" y="11.5" width="14" height="2.5" rx="1"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Main Content: Library Grid ═══ -->
+    <main class="main">
+      <!-- Filter chips -->
+      <div class="chip-bar mb-4">
+        <span class="chip active">All</span>
+        <span class="chip">Installed</span>
+        <span class="chip">Updates Available</span>
+        <span class="chip">&#x2B50; Favorites</span>
+        <span class="chip">&#x2728; New This Week</span>
+        <span class="chip">Downloaded</span>
+      </div>
+
+      <!-- Game grid -->
+      <div class="game-grid">
+
+        <!-- Card 1: Not installed -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-1">Beat Saber</div>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Beat Saber</div>
+            <div class="game-card-meta">2.1 GB &middot; v1.37.0</div>
+          </div>
+        </div>
+
+        <!-- Card 2: Installed -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-2">Superhot VR</div>
+          <span class="game-card-badge badge badge-installed">&#x2713; Installed</span>
+          <button class="game-card-fav active">&#x2665;</button>
+          <div class="card-body">
+            <div class="game-card-title">Superhot VR</div>
+            <div class="game-card-meta">1.8 GB &middot; v1.0.22</div>
+          </div>
+        </div>
+
+        <!-- Card 3: Update available -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-3">Blade &amp; Sorcery</div>
+          <span class="game-card-badge badge badge-update">&#x2191; Update</span>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Blade &amp; Sorcery: Nomad</div>
+            <div class="game-card-meta">3.4 GB &middot; v1.2.0</div>
+          </div>
+        </div>
+
+        <!-- Card 4: New -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-4">Gorilla Tag</div>
+          <span class="game-card-badge badge badge-new">&#x2728; New</span>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Gorilla Tag</div>
+            <div class="game-card-meta">850 MB &middot; v1.1.85</div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-5">Population: One</div>
+          <span class="game-card-badge badge badge-installed">&#x2713; Installed</span>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Population: One</div>
+            <div class="game-card-meta">4.1 GB &middot; v3.2.1</div>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-6">Pistol Whip</div>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Pistol Whip</div>
+            <div class="game-card-meta">1.2 GB &middot; v4.0.3</div>
+          </div>
+        </div>
+
+        <!-- Card 7 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-7">Walkabout Mini Golf</div>
+          <span class="game-card-badge badge badge-installed">&#x2713; Installed</span>
+          <button class="game-card-fav active">&#x2665;</button>
+          <div class="card-body">
+            <div class="game-card-title">Walkabout Mini Golf</div>
+            <div class="game-card-meta">1.5 GB &middot; v5.2.0</div>
+          </div>
+        </div>
+
+        <!-- Card 8 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-8">Resident Evil 4 VR</div>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Resident Evil 4 VR</div>
+            <div class="game-card-meta">8.2 GB &middot; v1.1.0</div>
+          </div>
+        </div>
+
+        <!-- Card 9 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-9">BONELAB</div>
+          <span class="game-card-badge badge badge-update">&#x2191; Update</span>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">BONELAB</div>
+            <div class="game-card-meta">6.7 GB &middot; v1.8.0</div>
+          </div>
+        </div>
+
+        <!-- Card 10 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-10">Arizona Sunshine 2</div>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Arizona Sunshine 2</div>
+            <div class="game-card-meta">5.3 GB &middot; v1.0.5</div>
+          </div>
+        </div>
+
+        <!-- Card 11 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-11">The Thrill of the Fight</div>
+          <span class="game-card-badge badge badge-installed">&#x2713; Installed</span>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">The Thrill of the Fight 2</div>
+            <div class="game-card-meta">780 MB &middot; v1.4.2</div>
+          </div>
+        </div>
+
+        <!-- Card 12 -->
+        <div class="card game-card">
+          <div class="game-card-thumb-placeholder placeholder-12">Asgard's Wrath 2</div>
+          <span class="game-card-badge badge badge-new">&#x2728; New</span>
+          <button class="game-card-fav">&#x2661;</button>
+          <div class="card-body">
+            <div class="game-card-title">Asgard's Wrath 2</div>
+            <div class="game-card-meta">12.4 GB &middot; v1.0.1</div>
+          </div>
+        </div>
+
+      </div><!-- /game-grid -->
+    </main>
+
+    <!-- ═══ Status Bar ═══ -->
+    <footer class="statusbar">
+      <div class="statusbar-progress-section">
+        <span>&#x2B07;&#xFE0F; Downloading:</span>
+        <strong style="color: var(--text-primary);">BONELAB</strong>
+        <span>&mdash; 67%</span>
+        <div class="statusbar-progress-track">
+          <div class="statusbar-progress-fill" style="width: 67%;"></div>
+        </div>
+        <span>18.2 MB/s</span>
+        <span>&middot; 0:38 left</span>
+        <button class="btn btn-ghost btn-sm">Pause</button>
+      </div>
+      <div class="statusbar-right">
+        <span>2,547 games</span>
+        <span>&middot;</span>
+        <span>59.8 GB free on Quest</span>
+      </div>
+    </footer>
+
+  </div><!-- /app -->
+
+  <!-- ═══ Toast example ═══ -->
+  <div class="toast-container">
+    <div class="toast">
+      <div class="toast-accent success"></div>
+      <div class="toast-body">
+        <div class="toast-title">Superhot VR installed</div>
+        <div class="toast-message">Successfully installed to Quest 3</div>
+      </div>
+      <button class="toast-dismiss">&times;</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+*.swp
+*.swo
+*~
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.log
+
+# Tauri/Rust
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+
+# Dependency managers
+Cargo.lock
+
+# App data
+.ralph/
+PREDOWNLOADED/
+.tmp-home/
+
+# Agentic test harness artifacts
+harness_runs/
+
+# Windows sideloader reference code
+windows-sideloader/
+
+# Random things
+scratch/
+externals/
+
+# Node
+node_modules/
+.vite/
+playwright-report/
+test-results/
+
+# Binaries
+desktop/src-tauri/binaries/
