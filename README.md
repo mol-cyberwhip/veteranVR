@@ -1,4 +1,4 @@
-# Rookie Desktop - Build Instructions
+# Veteran  Desktop - Build Instructions
 
 **Important**: All commands in this document should be run from the `desktop/` directory unless otherwise specified.
 
