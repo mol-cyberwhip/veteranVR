@@ -10,16 +10,18 @@ set -euo pipefail
 #   ./scripts/build-all.sh mac-arm mac-x86  # build selected targets
 #
 # Supported target aliases:
-#   mac-arm   -> aarch64-apple-darwin
-#   mac-x86   -> x86_64-apple-darwin
-#   linux     -> x86_64-unknown-linux-gnu
-#   windows   -> x86_64-pc-windows-msvc
+#   mac-arm    -> aarch64-apple-darwin
+#   mac-x86    -> x86_64-apple-darwin
+#   linux      -> x86_64-unknown-linux-gnu
+#   linux-arm  -> aarch64-unknown-linux-gnu
+#   windows    -> x86_64-pc-windows-msvc
 #
 # Prerequisites:
 #   - Rust cross-compilation toolchains installed for each target:
 #       rustup target add aarch64-apple-darwin x86_64-apple-darwin \
-#                         x86_64-unknown-linux-gnu x86_64-pc-windows-msvc
-#   - For Linux from macOS: a cross-linker (e.g. via `brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu`)
+#                         x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu x86_64-pc-windows-msvc
+#   - For Linux x86_64 from macOS: a cross-linker (e.g. via `brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu`)
+#   - For Linux ARM from macOS: a cross-linker (e.g. via `brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu`)
 #   - For Windows from macOS: cargo-xwin (`cargo install cargo-xwin`) or cross (`cargo install cross`)
 #   - Tauri CLI: `cargo install tauri-cli` (or `npx @tauri-apps/cli`)
 #   - Node.js + npm (for frontend build)
@@ -38,6 +40,7 @@ get_target_triple() {
         mac-arm)   echo "aarch64-apple-darwin" ;;
         mac-x86)   echo "x86_64-apple-darwin" ;;
         linux)     echo "x86_64-unknown-linux-gnu" ;;
+        linux-arm) echo "aarch64-unknown-linux-gnu" ;;
         windows)   echo "x86_64-pc-windows-msvc" ;;
         *)         echo "" ;;
     esac
@@ -45,12 +48,12 @@ get_target_triple() {
 
 is_valid_target() {
     case "$1" in
-        mac-arm|mac-x86|linux|windows) return 0 ;;
+        mac-arm|mac-x86|linux|linux-arm|windows) return 0 ;;
         *) return 1 ;;
     esac
 }
 
-ALL_ALIASES=(mac-arm mac-x86 linux windows)
+ALL_ALIASES=(mac-arm mac-x86 linux linux-arm windows)
 
 # Parse arguments
 REQUESTED=()
@@ -71,9 +74,10 @@ for arg in "$@"; do
             echo "  mac-arm     macOS Apple Silicon (aarch64-apple-darwin)"
             echo "  mac-x86     macOS Intel (x86_64-apple-darwin)"
             echo "  linux       Linux x86_64 (x86_64-unknown-linux-gnu)"
+            echo "  linux-arm   Linux ARM64 (aarch64-unknown-linux-gnu)"
             echo "  windows     Windows x86_64 (x86_64-pc-windows-msvc)"
             echo ""
-            echo "If no targets are specified, all 4 are built."
+            echo "If no targets are specified, all 5 are built."
             echo ""
             echo "Options:"
             echo "  --skip-binaries  Skip downloading sidecar binaries (adb/rclone/7z)"
@@ -141,12 +145,25 @@ check_prerequisites() {
     case "$target_alias" in
         linux)
             if [[ "$(uname -s)" == "Darwin" ]]; then
-                # Cross-compiling from macOS to Linux
+                # Cross-compiling from macOS to Linux x86_64
                 if ! command -v x86_64-unknown-linux-gnu-gcc &>/dev/null && \
                    ! command -v cross &>/dev/null; then
                     echo ""
-                    echo "Cross-compiling to Linux from macOS requires either:"
+                    echo "Cross-compiling to Linux x86_64 from macOS requires either:"
                     echo "  1. A cross-linker: brew install messense/macos-cross-toolchains/x86_64-unknown-linux-gnu"
+                    echo "  2. Or 'cross': cargo install cross"
+                    return 1
+                fi
+            fi
+            ;;
+        linux-arm)
+            if [[ "$(uname -s)" == "Darwin" ]]; then
+                # Cross-compiling from macOS to Linux ARM
+                if ! command -v aarch64-unknown-linux-gnu-gcc &>/dev/null && \
+                   ! command -v cross &>/dev/null; then
+                    echo ""
+                    echo "Cross-compiling to Linux ARM from macOS requires either:"
+                    echo "  1. A cross-linker: brew install messense/macos-cross-toolchains/aarch64-unknown-linux-gnu"
                     echo "  2. Or 'cross': cargo install cross"
                     return 1
                 fi
@@ -247,7 +264,7 @@ for alias in "${REQUESTED[@]}"; do
                     cp -R "$BUNDLE_DIR"/macos/*.app "$ARTIFACT_DIR/"
                 fi
                 ;;
-            linux)
+            linux|linux-arm)
                 # .deb, .AppImage, or raw binary
                 if ls "$BUNDLE_DIR"/deb/*.deb 2>/dev/null; then
                     cp "$BUNDLE_DIR"/deb/*.deb "$ARTIFACT_DIR/"

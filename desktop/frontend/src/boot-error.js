@@ -27,8 +27,8 @@
         }
       }
 
-      window.__rookieFrontendBootstrapped = false;
-      window.__rookieReportFrontendError = function reportFrontendError(message, detail) {
+      window.__veteranFrontendBootstrapped = false;
+      window.__veteranReportFrontendError = function reportFrontendError(message, detail) {
         const summary = String(message || "Unknown frontend error");
         const diagnostics = String(detail || "Open the developer console for details.");
         console.error("Frontend error:", summary, diagnostics);
@@ -42,18 +42,18 @@
         const detail = event?.error?.stack
           ? String(event.error.stack)
           : `${event?.filename || "inline"}:${event?.lineno || 0}:${event?.colno || 0}`;
-        window.__rookieReportFrontendError(message, detail);
+        window.__veteranReportFrontendError(message, detail);
       });
 
       window.addEventListener("unhandledrejection", (event) => {
         const reason = event?.reason;
         const message = reason?.message ? String(reason.message) : String(reason || "Unhandled promise rejection");
         const detail = reason?.stack ? String(reason.stack) : "Unhandled promise rejection";
-        window.__rookieReportFrontendError(message, detail);
+        window.__veteranReportFrontendError(message, detail);
       });
 
-      window.__rookieFrontendBootstrapWatchdog = window.setTimeout(() => {
-        if (window.__rookieFrontendBootstrapped) return;
+      window.__veteranFrontendBootstrapWatchdog = window.setTimeout(() => {
+        if (window.__veteranFrontendBootstrapped) return;
         showFrontendStartupError(
           "Frontend failed to initialize.",
           "A JavaScript syntax/module error blocked startup. Check console or retry after fixing the script."

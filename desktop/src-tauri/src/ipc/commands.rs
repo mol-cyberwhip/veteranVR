@@ -236,6 +236,7 @@ fn map_download_status(status: DownloadStatus) -> &'static str {
     match status {
         DownloadStatus::Queued => "queued",
         DownloadStatus::Downloading => "downloading",
+        DownloadStatus::Paused => "paused",
         DownloadStatus::Completed => "completed",
         DownloadStatus::Failed => "failed",
         DownloadStatus::Cancelled => "cancelled",
@@ -460,6 +461,8 @@ pub async fn backend_catalog_sync(
                 // 1. Fetch config
                 crate::logger::log("[CATALOG] Fetching config...");
                 let config = state.config.fetch_config().await.map_err(|e| e.to_string())?;
+                crate::logger::log(&format!("[CATALOG] Config base_uri: {}", config.base_uri));
+                crate::logger::log(&format!("[CATALOG] Config password length: {}", config.password.len()));
                 
                 // 2. Update rclone config
                 state.rclone.set_public_config(&config);
@@ -482,11 +485,35 @@ pub async fn backend_catalog_sync(
                     None
                 };
 
+                crate::logger::log(&format!("[CATALOG] Cache dir: {}", cache_dir.display()));
+                crate::logger::log(&format!("[CATALOG] Meta download dir: {}", meta_download_dir.display()));
+                crate::logger::log(&format!("[CATALOG] Meta archive path: {}", meta_archive.display()));
+                crate::logger::log(&format!("[CATALOG] Meta archive exists before sync: {}", meta_archive.exists()));
+                
                 crate::logger::log("[CATALOG] Running rclone sync for meta.7z...");
                 let result = state.rclone.sync_metadata(&meta_download_dir).await.map_err(|e| e.to_string())?;
+                crate::logger::log(&format!("[CATALOG] Sync result: success={}, stdout={}", result.success(), result.stdout));
                 if !result.success() {
                     crate::logger::log(&format!("[CATALOG] Metadata sync failed: {}", result.stderr));
                     return Err(format!("Metadata sync failed: {}", result.stderr));
+                }
+                
+                // Check if file was actually downloaded
+                crate::logger::log(&format!("[CATALOG] Meta archive exists after sync: {}", meta_archive.exists()));
+                
+                // List all files in download dir to debug
+                if let Ok(entries) = std::fs::read_dir(&meta_download_dir) {
+                    let files: Vec<String> = entries
+                        .filter_map(|e| e.ok())
+                        .map(|e| e.file_name().to_string_lossy().to_string())
+                        .collect();
+                    crate::logger::log(&format!("[CATALOG] Files in meta_download: {:?}", files));
+                }
+                
+                if meta_archive.exists() {
+                    if let Ok(metadata) = std::fs::metadata(&meta_archive) {
+                        crate::logger::log(&format!("[CATALOG] Meta archive size: {} bytes", metadata.len()));
+                    }
                 }
                 
                 // Check if we need to extract:
@@ -513,6 +540,52 @@ pub async fn backend_catalog_sync(
                 } else {
                     crate::logger::log("[CATALOG] meta.7z unchanged. Skipping extraction.");
                 }
+
+                // 4.5 Ensure thumbnails and notes are present in the main cache
+                // This runs even if we skip extraction, ensuring we recover if the cache was partially cleared
+                let extracted_meta = extract_dir.join(".meta");
+                if extracted_meta.exists() {
+                    let extracted_thumbnails = extracted_meta.join("thumbnails");
+                    let extracted_notes = extracted_meta.join("notes");
+                    
+                    let target_thumbnails = cache_dir.join("thumbnails");
+                    let target_notes = cache_dir.join("notes");
+                    
+                    let _ = tokio::fs::create_dir_all(&target_thumbnails).await;
+                    let _ = tokio::fs::create_dir_all(&target_notes).await;
+                    
+                    crate::logger::log("[CATALOG] Syncing thumbnails and notes to cache...");
+                    
+                    // Copy thumbnails
+                    if let Ok(mut entries) = tokio::fs::read_dir(&extracted_thumbnails).await {
+                        let mut count = 0;
+                        while let Ok(Some(entry)) = entries.next_entry().await {
+                            let dest = target_thumbnails.join(entry.file_name());
+                            if !dest.exists() {
+                                let _ = tokio::fs::copy(entry.path(), dest).await;
+                                count += 1;
+                            }
+                        }
+                        if count > 0 {
+                            crate::logger::log(&format!("[CATALOG] Copied {} new thumbnails", count));
+                        }
+                    }
+                    
+                    // Copy notes
+                    if let Ok(mut entries) = tokio::fs::read_dir(&extracted_notes).await {
+                        let mut count = 0;
+                        while let Ok(Some(entry)) = entries.next_entry().await {
+                            let dest = target_notes.join(entry.file_name());
+                            if !dest.exists() {
+                                let _ = tokio::fs::copy(entry.path(), dest).await;
+                                count += 1;
+                            }
+                        }
+                        if count > 0 {
+                            crate::logger::log(&format!("[CATALOG] Copied {} new notes", count));
+                        }
+                    }
+                }
                 
                 // 5. Load into catalog
                 if !game_list_path.exists() {
@@ -528,8 +601,6 @@ pub async fn backend_catalog_sync(
                     let cached_path = cache_dir.join("VRP-GameList.txt");
                     let _ = tokio::fs::copy(&game_list_path, &cached_path).await;
                     
-                    // Touch the file to update its modification time
-                    // This ensures the 4-hour rule works correctly
                     if let Ok(file) = std::fs::OpenOptions::new().write(true).open(&cached_path) {
                         let _ = file.set_modified(std::time::SystemTime::now());
                     }
@@ -875,11 +946,13 @@ pub async fn backend_download_queue_add(
 ) -> Result<DownloadQueueAddResult, String> {
     let maybe_game = {
         let catalog = state.catalog.read().await;
+        // If release_name is provided, use it to find the exact version.
+        // Otherwise, fall back to the default game for that package.
         match release_name {
-            Some(ref rel) => catalog
+            Some(ref rel) if !rel.is_empty() => catalog
                 .get_game_by_package_and_release(&package_name, rel)
                 .cloned(),
-            None => catalog.get_game_by_package(&package_name).cloned(),
+            _ => catalog.get_game_by_package(&package_name).cloned(),
         }
     };
 
@@ -889,11 +962,11 @@ pub async fn backend_download_queue_add(
 
     let download = state.download.lock().await;
     
-    // Check if already queued
+    // Check if already queued - check both package and release name
     let queue_items = download.queue().await;
     let already_queued = queue_items.iter().any(|item| {
         item.game.package_name == package_name 
-            && (release_name.is_none() || item.game.release_name == release_name.clone().unwrap())
+            && item.game.release_name == game.release_name
     });
     
     if already_queued {
@@ -960,6 +1033,7 @@ pub async fn backend_download_start_processing(state: State<'_, AppState>) -> Re
                 async move {
                     let event_name = match item.status {
                         DownloadStatus::Downloading => "download.progress",
+                        DownloadStatus::Paused => "download.paused",
                         DownloadStatus::Completed => "download.completed",
                         DownloadStatus::Failed => "download.failed",
                         DownloadStatus::Cancelled => "download.cancelled",
@@ -967,6 +1041,7 @@ pub async fn backend_download_start_processing(state: State<'_, AppState>) -> Re
                     };
                     let state = match item.status {
                         DownloadStatus::Downloading => "running",
+                        DownloadStatus::Paused => "paused",
                         DownloadStatus::Completed => "succeeded",
                         DownloadStatus::Failed => "failed",
                         DownloadStatus::Cancelled => "cancelled",
@@ -993,13 +1068,39 @@ pub async fn backend_download_start_processing(state: State<'_, AppState>) -> Re
 #[specta]
 pub async fn backend_download_cancel(
     state: State<'_, AppState>,
-    _package_name: Option<String>,
+    package_name: Option<String>,
 ) -> Result<DownloadCancelResult, String> {
     let download = state.download.lock().await;
+    
+    // If a package name is provided, remove it from the queue regardless of status.
+    // If it's currently downloading, it will be cancelled as well.
+    if let Some(pkg) = package_name {
+        // Find if it is the current active download
+        let is_active = download.queue().await.iter().any(|i| i.game.package_name == pkg && i.status == DownloadStatus::Downloading);
+        
+        if is_active {
+            let _ = download.cancel_current().await;
+        }
+        
+        // Remove from queue completely so it doesn't linger in UI
+        let cancelled = download.remove_from_queue(&pkg).await;
+        return Ok(DownloadCancelResult { cancelled });
+    }
+
+    // Fallback: cancel current active download if no package specified
     let cancelled = download
         .cancel_current()
         .await
         .map_err(|err| err.to_string())?;
+    
+    // Also remove the cancelled item from queue
+    if cancelled {
+        let queue = download.queue().await;
+        if let Some(item) = queue.iter().find(|i| i.status == DownloadStatus::Cancelled) {
+            download.remove_from_queue(&item.game.package_name).await;
+        }
+    }
+
     Ok(DownloadCancelResult { cancelled })
 }
 
@@ -1037,6 +1138,24 @@ pub async fn backend_download_pause(state: State<'_, AppState>) -> Result<(), St
 pub async fn backend_download_resume(state: State<'_, AppState>) -> Result<(), String> {
     let settings = state.settings.get_settings().await;
     state.rclone.resume_downloads(settings.bandwidth_limit_mbps).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[specta]
+pub async fn backend_download_pause_item(
+    state: State<'_, AppState>,
+    package_name: String,
+) -> Result<bool, String> {
+    state.download.lock().await.pause_item(&package_name).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+#[specta]
+pub async fn backend_download_resume_item(
+    state: State<'_, AppState>,
+    package_name: String,
+) -> Result<bool, String> {
+    state.download.lock().await.resume_item(&package_name).await.map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -1341,14 +1460,22 @@ pub async fn backend_install_cancel() -> Result<InstallCancelResult, String> {
 
 #[tauri::command]
 #[specta]
-pub async fn backend_uninstall_app(
+pub async fn backend_uninstall_game(
     state: State<'_, AppState>,
     package_name: String,
+    keep_obb: Option<bool>,
+    keep_data: Option<bool>,
 ) -> Result<UninstallResult, String> {
+    crate::logger::log(&format!("[IPC] backend_uninstall_game: package={}, keep_obb={:?}, keep_data={:?}", package_name, keep_obb, keep_data));
     let serial = selected_serial(&state).await;
     let result = state
         .install
-        .uninstall_game(&package_name, serial.as_deref())
+        .uninstall_game(
+            &package_name,
+            serial.as_deref(),
+            keep_obb.unwrap_or(false),
+            keep_data.unwrap_or(false),
+        )
         .await
         .map_err(|err| err.to_string())?;
     Ok(UninstallResult {
@@ -1366,7 +1493,7 @@ pub async fn backend_installed_apps(state: State<'_, AppState>) -> Result<Instal
     let packages = AdbService::parse_packages_with_versions_output(&output.stdout);
 
     let catalog = state.catalog.read().await;
-    let apps: Vec<InstalledApp> = packages
+    let mut apps: Vec<InstalledApp> = packages
         .into_iter()
         .map(|(pkg, version)| {
             let catalog_game = catalog.get_game_by_package(&pkg);
@@ -1374,6 +1501,16 @@ pub async fn backend_installed_apps(state: State<'_, AppState>) -> Result<Instal
             let game_name = catalog_game.map(|g| g.game_name.clone());
             let catalog_version_code = catalog_game.map(|g| g.version_code.clone());
             let size = catalog_game.map(|g| g.size.clone());
+
+            let mut update_available = false;
+            if let (Some(installed_ver), Some(catalog_ver)) = (version.as_ref(), catalog_version_code.as_ref()) {
+                let inst: i64 = installed_ver.parse().unwrap_or(0);
+                let cat: i64 = catalog_ver.parse().unwrap_or(0);
+                if cat > inst {
+                    update_available = true;
+                }
+            }
+
             InstalledApp {
                 package_name: pkg.clone(),
                 app_name: game_name.clone().unwrap_or_else(|| pkg.clone()),
@@ -1387,16 +1524,21 @@ pub async fn backend_installed_apps(state: State<'_, AppState>) -> Result<Instal
                 catalog_version_code,
                 installed_version_code: version,
                 size,
+                update_available,
             }
         })
         .collect();
 
+    // Alphabetical sort by app_name
+    apps.sort_by(|a, b| a.app_name.to_lowercase().cmp(&b.app_name.to_lowercase()));
+
     let count = apps.len() as u32;
+    let has_updates = apps.iter().any(|a| a.update_available);
 
     Ok(InstalledAppsResult {
         apps,
         count,
-        has_updates: false,
+        has_updates,
     })
 }
 
@@ -2145,7 +2287,7 @@ pub fn register_invoke_handler(builder: tauri::Builder<Wry>) -> tauri::Builder<W
         backend_install_game,
         backend_install_status,
         backend_install_cancel,
-        backend_uninstall_app,
+        backend_uninstall_game,
         backend_installed_apps,
         backend_installed_app_version,
         backend_install_local,
@@ -2203,14 +2345,12 @@ mod tests {
         use crate::models::game::Game;
         use crate::models::settings::Settings;
         use crate::models::config::PublicConfig;
-        use crate::models::device::DeviceInfo;
         use crate::models::responses::*;
 
         tauri_specta::Builder::<tauri::Wry>::new()
             .typ::<Game>()
             .typ::<Settings>()
             .typ::<PublicConfig>()
-            .typ::<DeviceInfo>()
             .typ::<BackendReadyState>()
             .typ::<BackendRecoverResult>()
             .typ::<SettingsResponse>()
@@ -2335,7 +2475,7 @@ mod tests {
                 backend_install_game,
                 backend_install_status,
                 backend_install_cancel,
-                backend_uninstall_app,
+                backend_uninstall_game,
                 backend_installed_apps,
                 backend_installed_app_version,
                 backend_install_local,

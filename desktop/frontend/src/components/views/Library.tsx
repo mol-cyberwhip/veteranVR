@@ -24,9 +24,13 @@ export default function LibraryView() {
   const queueItems = downloadQueue?.queue || [];
   const activeDownload = downloadQueue?.active_download;
   
-  const getDownloadState = (pkg: string) => {
-      if (activeDownload?.package_name === pkg) return { status: 'downloading', progress: activeDownload.progress_percent };
-      const queued = queueItems.find((i: any) => i.package_name === pkg);
+  const getDownloadState = (pkg: string, releaseName?: string) => {
+      if (activeDownload?.package_name === pkg && (!releaseName || activeDownload.release_name === releaseName)) {
+          return { status: 'downloading', progress: activeDownload.progress_percent };
+      }
+      const queued = queueItems.find((i: any) => 
+          i.package_name === pkg && (!releaseName || i.release_name === releaseName)
+      );
       if (queued) return { status: queued.status, progress: queued.progress_percent };
       return { status: undefined, progress: 0 };
   };
@@ -137,14 +141,14 @@ export default function LibraryView() {
             <p style={{color:'#999',textAlign:'center',padding:'24px'}}>No games found. Sync catalog first.</p>
         )}
         {!loading && games.map(game => {
-            const dl = getDownloadState(game.package_name);
+            const dl = getDownloadState(game.package_name, game.release_name);
             const installedVersion = installedMap.get(game.package_name);
             const isInstalled = installedVersion !== undefined;
             const hasUpdate = isInstalled && game.version_code > (installedVersion || 0);
 
             return (
                 <GameCard
-                    key={game.package_name}
+                    key={`${game.package_name}-${game.release_name}`}
                     game={game}
                     onDownload={handleDownload}
                     onInstall={handleInstall}

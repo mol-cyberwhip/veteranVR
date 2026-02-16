@@ -1,4 +1,4 @@
-use crate::models::device::DeviceInfo;
+use crate::models::device::RawDeviceInfo;
 use adb_client::server::ADBServer;
 use adb_client::ADBDeviceExt;
 use anyhow::{anyhow, Context, Result};
@@ -103,14 +103,14 @@ impl AdbService {
         .context("failed to join kill_server task")?
     }
 
-    pub async fn get_devices(&self) -> Result<Vec<DeviceInfo>> {
+    pub async fn get_devices(&self) -> Result<Vec<RawDeviceInfo>> {
         let server_addr = self.server_addr;
         tokio::task::spawn_blocking(move || {
             let mut server = ADBServer::new(server_addr);
             let devices = server.devices_long()?;
             Ok(devices
                 .into_iter()
-                .map(|device| DeviceInfo {
+                .map(|device| RawDeviceInfo {
                     serial: device.identifier,
                     state: device.state.to_string(),
                     model: if device.model == "Unk" {
@@ -373,7 +373,7 @@ impl AdbService {
         Ok(map)
     }
 
-    pub fn parse_devices_output(output: &str) -> Vec<DeviceInfo> {
+    pub fn parse_devices_output(output: &str) -> Vec<RawDeviceInfo> {
         output
             .lines()
             .filter_map(|line| {
@@ -398,7 +398,7 @@ impl AdbService {
                         product = value.to_string();
                     }
                 }
-                Some(DeviceInfo {
+                Some(RawDeviceInfo {
                     serial: parts[0].to_string(),
                     state: parts[1].to_string(),
                     model,

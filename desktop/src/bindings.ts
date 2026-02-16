@@ -277,9 +277,9 @@ async backendInstallCancel() : Promise<Result<InstallCancelResult, string>> {
     else return { status: "error", error: e  as any };
 }
 },
-async backendUninstallApp(packageName: string) : Promise<Result<UninstallResult, string>> {
+async backendUninstallGame(packageName: string, keepObb: boolean | null, keepData: boolean | null) : Promise<Result<UninstallResult, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("backend_uninstall_app", { packageName }) };
+    return { status: "ok", data: await TAURI_INVOKE("backend_uninstall_game", { packageName, keepObb, keepData }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -709,7 +709,7 @@ export type InstallCancelResult = { cancelled: boolean }
 export type InstallGameResult = { operation_id: string; package_name: string }
 export type InstallLocalResult = { success: boolean; message: string }
 export type InstallStatus = { is_installing: boolean; current_package: string | null; progress_percent: number; status_message: string }
-export type InstalledApp = { package_name: string; app_name: string; version_code: string; version_name: string; is_system_app: boolean; install_time: number | null; last_update_time: number | null; in_catalog: boolean; game_name: string | null; catalog_version_code: string | null; installed_version_code: string | null; size: string | null }
+export type InstalledApp = { package_name: string; app_name: string; version_code: string; version_name: string; is_system_app: boolean; install_time: number | null; last_update_time: number | null; in_catalog: boolean; game_name: string | null; catalog_version_code: string | null; installed_version_code: string | null; size: string | null; update_available: boolean }
 export type InstalledAppsResult = { apps: InstalledApp[]; count: number; has_updates: boolean }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**

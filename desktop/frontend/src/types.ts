@@ -32,6 +32,7 @@ export interface DeviceState {
 
 export interface DownloadQueueItem {
     package_name: string;
+    release_name: string;
     game_name?: string;
     status: string;
     progress_percent: number;
