@@ -34,6 +34,7 @@ function App() {
   const deviceClass = deviceConnected ? "sidebar-device-status connected" : "sidebar-device-status disconnected";
 
   const queueCount = downloadQueue?.queue?.length || 0;
+  const activeDownload = downloadQueue?.active_download;
 
   const getBadge = (id: string) => {
     if (id === 'download-view' && queueCount > 0) return queueCount;
@@ -114,10 +115,37 @@ function App() {
       <footer className="statusbar" id="statusbar">
         <div className="statusbar-left">
           <span className={`statusbar-dot ${deviceConnected ? 'connected' : ''}`} id="statusbar-device-dot"></span>
-          <span id="statusbar-device-text">{deviceConnected ? "Device Connected" : "No device"}</span>
+          <span id="statusbar-device-text">
+            {deviceConnected ? (deviceStatus?.status_message || "Device Connected") : "No device"}
+          </span>
         </div>
+
+        {activeDownload && (
+          <div className="statusbar-center">
+            <span className="statusbar-download-label">
+              {activeDownload.game_name || activeDownload.package_name}
+            </span>
+            <div className="statusbar-download-progress">
+              <div
+                className="statusbar-download-progress-fill"
+                style={{ width: `${activeDownload.progress_percent || 0}%` }}
+              />
+            </div>
+            <span className="statusbar-download-pct">
+              {(activeDownload.progress_percent || 0).toFixed(0)}%
+              {activeDownload.speed ? ` (${activeDownload.speed})` : ''}
+            </span>
+          </div>
+        )}
+
         <div className="statusbar-right">
-          <span id="statusbar-queue-count">Queue: {queueCount}</span>
+          <button
+            type="button"
+            className="statusbar-queue-btn"
+            onClick={() => setActiveTab('download-view')}
+          >
+            Queue: {queueCount}
+          </button>
         </div>
       </footer>
     </div>
