@@ -765,17 +765,26 @@
         cursor: pointer;
         transition: transform 180ms ease, box-shadow 190ms ease, border-color 190ms ease;
         align-content: start;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .game-card:hover {
         transform: translateY(-3px) scale(1.01);
         border-color: rgba(95, 138, 200, 0.95);
         box-shadow: 0 22px 35px rgba(7, 14, 27, 0.52);
+        z-index: 2;
       }
 
       .game-card.expanded {
         border-color: rgba(95, 138, 200, 0.95);
         box-shadow: 0 22px 35px rgba(7, 14, 27, 0.52);
+        z-index: 2;
+        transform: none;
+      }
+
+      .game-card.expanded:hover {
+        transform: none;
       }
 
       .card-thumb {
@@ -830,7 +839,7 @@
         inset: 0;
         display: flex;
         align-items: flex-end;
-        justify-content: stretch;
+        justify-content: center;
         padding: 8px;
         background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
         opacity: 0;
@@ -963,6 +972,7 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+        min-width: 0;
       }
 
       .card-expanded-block {
@@ -970,6 +980,7 @@
         border-radius: 10px;
         border: 1px solid rgba(51, 69, 98, 0.72);
         background: rgba(14, 22, 36, 0.75);
+        min-width: 0;
       }
 
       .card-expanded-label {
@@ -985,9 +996,13 @@
       .card-expanded-value {
         font-size: 0.79rem;
         color: #dce8ff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .card-expanded-package {
+        overflow: hidden;
       }
 
       .card-expanded-package .card-expanded-value {
@@ -999,6 +1014,15 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
+        min-width: 0;
+      }
+
+      .card-expanded-actions button {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .card-expanded-status {
