@@ -190,7 +190,7 @@ export default function LibraryView() {
             onClose={() => setSelectedGame(null)}
             onDownload={handleDownload}
             onInstall={handleInstall}
-            statusProps={getSelectedGameStatus()}
+            {...getSelectedGameStatus()}
         />
       )}
     </section>
