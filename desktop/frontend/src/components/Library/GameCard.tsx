@@ -92,6 +92,22 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onDownload, onInstall,
             {favorite ? '\u2665' : '\u2661'}
         </button>
         <div className="card-badges">{badges}</div>
+        <div className="card-hover-overlay">
+          <button
+            type="button"
+            className={`card-hover-action ${isBusy ? 'busy' : ''} ${(isInstalled || downloadStatus === 'completed') ? 'install-accent' : 'btn-primary'}`}
+            onClick={handleAction}
+            disabled={isBusy}
+          >
+            {isInstalling && <span className="btn-spinner" />}
+            {getActionLabel()}
+          </button>
+        </div>
+        {(downloadStatus === 'downloading' && downloadProgress !== undefined) && (
+          <div className="card-inline-progress">
+            <div className="card-inline-progress-fill" style={{ width: `${downloadProgress}%` }} />
+          </div>
+        )}
       </div>
 
       <div className="card-meta-top">
