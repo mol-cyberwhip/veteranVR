@@ -33,25 +33,21 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
   const [releaseNotes, setReleaseNotes] = useState<string>('');
   const [loadingNotes, setLoadingNotes] = useState(true);
 
-  // Fetch trailer and notes when game changes
   useEffect(() => {
     if (!isOpen || !game) return;
 
     const fetchData = async () => {
-      // Reset states
       setLoadingTrailer(true);
       setLoadingNotes(true);
       setTrailerId(null);
       setReleaseNotes('');
 
       try {
-        // Fetch thumbnail
         const { exists, path } = await api.getThumbnailPath(game.package_name);
         if (exists && path) {
           setThumbnailSrc(api.convertFileSrc(path));
         }
 
-        // Fetch trailer
         const videoId = await api.searchYoutubeTrailer(game.game_name);
         setTrailerId(videoId);
       } catch (e) {
@@ -61,7 +57,6 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
       }
 
       try {
-        // Fetch release notes
         const noteData = await api.getGameNote(game.package_name);
         if (noteData && noteData.note) {
           setReleaseNotes(noteData.note);
@@ -76,7 +71,6 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     fetchData();
   }, [game, isOpen]);
 
-  // Handle escape key to close modal
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -129,6 +123,8 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
     onDownload(game.package_name, game.release_name);
   };
 
+  const fallbackLabel = (game.game_name || '?').substring(0, 2).toUpperCase();
+
   return (
     <div
       className="modal-overlay"
@@ -138,97 +134,97 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
         }
       }}
     >
-      <div className="modal-content">
-        <button className="modal-close" onClick={onClose} aria-label="Close">
-          ×
-        </button>
-
-        <div className="modal-header">
-          <h2 className="modal-title">{game.game_name || game.release_name}</h2>
+      <div className="modal-container">
+        {/* Header */}
+        <div className="modal-header-row">
+          <h1 className="modal-game-title">{game.game_name || game.release_name}</h1>
+          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+            ×
+          </button>
         </div>
 
-        <div className="modal-grid">
-          <div className="modal-info">
-            <div className="modal-thumbnail">
+        {/* Main Content Grid */}
+        <div className="modal-body">
+          {/* Left Column */}
+          <div className="modal-col-left">
+            <div className="modal-media-thumb">
               {thumbnailSrc ? (
                 <img src={thumbnailSrc} alt={game.game_name} />
               ) : (
-                <div className="modal-thumbnail-placeholder">
-                  {(game.game_name || '?').substring(0, 2).toUpperCase()}
-                </div>
+                <div className="modal-thumb-placeholder">{fallbackLabel}</div>
               )}
             </div>
-
-            <div className="modal-info-list">
-              <div className="modal-info-item">
-                <span className="modal-info-label">Package</span>
-                <span className="modal-info-value">{game.package_name}</span>
+            
+            <div className="modal-meta-panel">
+              <div className="meta-row">
+                <span className="meta-key">Package</span>
+                <span className="meta-val" title={game.package_name}>{game.package_name}</span>
               </div>
-              <div className="modal-info-item">
-                <span className="modal-info-label">Version</span>
-                <span className="modal-info-value">{game.version_code}</span>
+              <div className="meta-row">
+                <span className="meta-key">Version</span>
+                <span className="meta-val">{game.version_code}</span>
               </div>
-              <div className="modal-info-item">
-                <span className="modal-info-label">Size</span>
-                <span className="modal-info-value">
-                  {(!game.size || game.size === '0' || game.size === '0 MB')
-                    ? 'Unknown'
-                    : game.size}
+              <div className="meta-row">
+                <span className="meta-key">Size</span>
+                <span className="meta-val">
+                  {(!game.size || game.size === '0' || game.size === '0 MB') ? 'Unknown' : game.size}
                 </span>
               </div>
-              <div className="modal-info-item">
-                <span className="modal-info-label">Downloads</span>
-                <span className="modal-info-value">{game.downloads || '0'}</span>
+              <div className="meta-row">
+                <span className="meta-key">Downloads</span>
+                <span className="meta-val">{game.downloads || '0'}</span>
               </div>
               {game.last_updated && (
-                <div className="modal-info-item">
-                  <span className="modal-info-label">Updated</span>
-                  <span className="modal-info-value">{game.last_updated}</span>
+                <div className="meta-row">
+                  <span className="meta-key">Updated</span>
+                  <span className="meta-val">{game.last_updated}</span>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="modal-video">
-            {loadingTrailer ? (
-              <div className="modal-video-loading">
-                <div className="loading-spinner" />
-                <span>Finding trailer...</span>
-              </div>
-            ) : trailerId ? (
-              <div className="video-container">
+          {/* Right Column */}
+          <div className="modal-col-right">
+            <div className="modal-video-wrapper">
+              {loadingTrailer ? (
+                <div className="video-loading-state">
+                  <div className="spinner" />
+                  <span>Finding trailer...</span>
+                </div>
+              ) : trailerId ? (
                 <iframe
                   src={`https://www.youtube.com/embed/${trailerId}?autoplay=1&mute=1&rel=0`}
                   title={`${game.game_name} Trailer`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 />
-              </div>
-            ) : (
-              <div className="modal-video-placeholder">
-                <span>No trailer found</span>
+              ) : (
+                <div className="video-empty-state">
+                  <span>No trailer found</span>
+                </div>
+              )}
+            </div>
+
+            {releaseNotes && (
+              <div className="modal-notes-section">
+                <h3 className="notes-title">Release Notes</h3>
+                <div className="notes-content">
+                  {loadingNotes ? (
+                    <div className="spinner-small" />
+                  ) : (
+                    <pre>{releaseNotes}</pre>
+                  )}
+                </div>
               </div>
             )}
           </div>
         </div>
 
-        {releaseNotes && (
-          <div className="modal-notes">
-            <h3 className="modal-section-title">Release Notes</h3>
-            <div className="modal-notes-content">
-              {loadingNotes ? (
-                <div className="loading-spinner-small" />
-              ) : (
-                <pre>{releaseNotes}</pre>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="modal-actions">
+        {/* Footer Actions */}
+        <div className="modal-footer">
           <button
             type="button"
-            className={`btn-primary modal-action-btn ${isBusy ? 'busy' : ''}`}
+            className={`action-btn-primary ${isBusy ? 'busy' : ''}`}
             onClick={handlePrimaryAction}
             disabled={isBusy}
           >
@@ -239,7 +235,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           {!isInstalled && downloadStatus !== 'completed' && (
             <button
               type="button"
-              className="btn-secondary modal-action-btn"
+              className="action-btn-secondary"
               onClick={handleDownloadOnly}
               disabled={isBusy || downloadStatus === 'completed'}
             >
