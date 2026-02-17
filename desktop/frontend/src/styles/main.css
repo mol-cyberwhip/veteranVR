@@ -1497,14 +1497,32 @@
       }
 
       /* Installed apps list */
+      .installed-section {
+        margin-bottom: 6px;
+      }
       .installed-section-title {
-        font-size: 0.72rem;
+        font-size: 0.76rem;
         font-weight: 700;
         color: var(--text-2);
         text-transform: uppercase;
         letter-spacing: 0.04em;
         margin: 14px 0 8px 4px;
         opacity: 0.85;
+      }
+      .installed-section-updates {
+        border-left: 3px solid var(--warn);
+        padding-left: 10px;
+        border-radius: 2px;
+      }
+      .installed-section-updates .installed-section-title {
+        color: var(--warn);
+        opacity: 1;
+      }
+      .installed-section-updates .installed-item {
+        border-color: rgba(244, 181, 72, 0.25);
+      }
+      .installed-section-updates .installed-item:hover {
+        border-color: rgba(244, 181, 72, 0.5);
       }
       .installed-size-tag {
         color: rgba(220, 232, 255, 0.55);
@@ -1808,7 +1826,7 @@
 
       /* Installed name update highlight */
       .installed-name.has-update {
-        color: var(--accent);
+        color: var(--warn);
       }
 
       /* Empty state */
