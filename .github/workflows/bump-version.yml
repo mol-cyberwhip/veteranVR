@@ -1,0 +1,70 @@
+name: Bump Version
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read current version
+        id: version
+        run: |
+          CURRENT=$(grep '"version"' desktop/src-tauri/tauri.conf.json | head -1 | sed 's/.*"\([0-9]*\.[0-9]*\.[0-9]*\)".*/\1/')
+          echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
+
+          # Bump patch version
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT"
+          PATCH=$((PATCH + 1))
+          NEW="${MAJOR}.${MINOR}.${PATCH}"
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          echo "Bumping $CURRENT -> $NEW"
+
+      - name: Check if tag already exists
+        id: check
+        run: |
+          if git rev-parse "v${{ steps.version.outputs.current }}" >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Tag current version
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "v${{ steps.version.outputs.current }}"
+          git push origin "v${{ steps.version.outputs.current }}"
+
+      - name: Bump version in files
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          OLD="${{ steps.version.outputs.current }}"
+          NEW="${{ steps.version.outputs.new }}"
+
+          # Update tauri.conf.json
+          sed -i "s/\"version\": \"$OLD\"/\"version\": \"$NEW\"/" desktop/src-tauri/tauri.conf.json
+
+          # Update Cargo.toml
+          sed -i "0,/^version = \"$OLD\"/s//version = \"$NEW\"/" desktop/src-tauri/Cargo.toml
+
+          # Update frontend package.json
+          sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"$NEW\"/" desktop/frontend/package.json
+
+      - name: Commit version bump
+        if: steps.check.outputs.exists == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add desktop/src-tauri/tauri.conf.json desktop/src-tauri/Cargo.toml desktop/frontend/package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip ci]" || echo "No changes to commit"
+          git push
