@@ -44,7 +44,7 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
             {isDownloading && (
                 <button
                     onClick={() => onPause(item.package_name)}
-                    className="btn-sm"
+                    className="btn-sm btn-secondary"
                 >
                     Pause
                 </button>
@@ -52,7 +52,7 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
             {isPaused && (
                 <button
                     onClick={() => onResume(item.package_name)}
-                    className="btn-sm"
+                    className="btn-sm btn-primary"
                 >
                     Resume
                 </button>
@@ -68,7 +68,7 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
             {isFailed && (
                 <button
                     onClick={() => onRetry(item.package_name)}
-                    className="btn-sm"
+                    className="btn-sm btn-primary"
                 >
                     Retry
                 </button>
