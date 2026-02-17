@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use regex::Regex;
 use crate::models::game::Game;
 use crate::models::responses::*;
 use crate::services::adb::AdbService;
@@ -28,6 +30,7 @@ pub struct AppState {
     pub rclone: Arc<RcloneService>,
     install: InstallService,
     selected_serial: Arc<RwLock<Option<String>>>,
+    pub youtube_cache: Arc<Mutex<HashMap<String, Option<String>>>>,
     events: Arc<Mutex<Vec<Value>>>,
 }
 
@@ -67,6 +70,7 @@ impl AppState {
             rclone,
             install,
             selected_serial: Arc::new(RwLock::new(None)),
+            youtube_cache: Arc::new(Mutex::new(HashMap::new())),
             events: Arc::new(Mutex::new(Vec::new())),
         }
     }
@@ -108,6 +112,7 @@ impl AppState {
             rclone,
             install,
             selected_serial: Arc::new(RwLock::new(None)),
+            youtube_cache: Arc::new(Mutex::new(HashMap::new())),
             events: Arc::new(Mutex::new(Vec::new())),
         }
     }
@@ -153,6 +158,7 @@ impl AppState {
             rclone,
             install,
             selected_serial: Arc::new(RwLock::new(None)),
+            youtube_cache: Arc::new(Mutex::new(HashMap::new())),
             events: Arc::new(Mutex::new(Vec::new())),
         }
     }
@@ -667,6 +673,49 @@ pub async fn backend_catalog_search(
         limit,
         query,
     })
+}
+
+#[tauri::command]
+#[specta]
+pub async fn search_youtube_trailer(
+    state: State<'_, AppState>,
+    game_name: String,
+) -> Result<Option<String>, String> {
+    // Check cache
+    {
+        let cache = state.youtube_cache.lock().await;
+        if let Some(video_id) = cache.get(&game_name) {
+            return Ok(video_id.clone());
+        }
+    }
+
+    // Search YouTube
+    let query = format!("{} VR trailer", game_name);
+    let encoded_query = url::form_urlencoded::byte_serialize(query.as_bytes()).collect::<String>();
+    let url = format!("https://www.youtube.com/results?search_query={}", encoded_query);
+    
+    let client = reqwest::Client::builder()
+        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+        .timeout(std::time::Duration::from_secs(5))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let response = client.get(&url).send().await.map_err(|e| e.to_string())?;
+    let text = response.text().await.map_err(|e| e.to_string())?;
+
+    // Parse video ID
+    let re = Regex::new(r"watch\?v=([a-zA-Z0-9_-]{11})").map_err(|e| e.to_string())?;
+    let video_id = re.captures(&text)
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string());
+
+    // Update cache
+    {
+        let mut cache = state.youtube_cache.lock().await;
+        cache.insert(game_name, video_id.clone());
+    }
+
+    Ok(video_id)
 }
 
 #[tauri::command]
@@ -2262,6 +2311,7 @@ pub fn register_invoke_handler(builder: tauri::Builder<Wry>) -> tauri::Builder<W
         backend_catalog_load_cache,
         backend_catalog_sync,
         backend_catalog_search,
+        search_youtube_trailer,
         backend_catalog_game_detail,
         backend_catalog_game_versions,
         backend_catalog_thumbnail_path,
@@ -2450,6 +2500,7 @@ mod tests {
                 backend_catalog_load_cache,
                 backend_catalog_sync,
                 backend_catalog_search,
+                search_youtube_trailer,
                 backend_catalog_game_detail,
                 backend_catalog_game_versions,
                 backend_catalog_thumbnail_path,

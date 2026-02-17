@@ -3,12 +3,14 @@ import { api } from '../../services/api';
 import { useApp } from '../../context/AppContext';
 import { Game } from '../../types';
 import { GameCard } from '../Library/GameCard';
+import { GameDetailModal } from '../Library/GameDetailModal';
 
 export default function LibraryView() {
   const { catalogStatus, downloadQueue, installedApps, installingPackages, startInstall } = useApp();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
   // Filter state
   const [search, setSearch] = useState('');
@@ -72,6 +74,23 @@ export default function LibraryView() {
           setError(`${e.message || 'Failed to start install'}. Check Diagnostics for details.`);
       }
     };
+
+  const getSelectedGameStatus = () => {
+    if (!selectedGame) return { isInstalled: false, hasUpdate: false, downloadStatus: undefined, downloadProgress: undefined, installStatus: undefined };
+    
+    const dl = getDownloadState(selectedGame.package_name, selectedGame.release_name);
+    const installedVersion = installedMap.get(selectedGame.package_name);
+    const isInstalled = installedVersion !== undefined;
+    const hasUpdate = isInstalled && selectedGame.version_code > (installedVersion || 0);
+    
+    return {
+        isInstalled,
+        hasUpdate,
+        downloadStatus: dl.status,
+        downloadProgress: dl.progress,
+        installStatus: installingPackages.get(selectedGame.package_name)
+    };
+  };
 
   return (
     <section className="content-view active panel" id="library-view">
@@ -153,6 +172,7 @@ export default function LibraryView() {
                     game={game}
                     onDownload={handleDownload}
                     onInstall={handleInstall}
+                    onSelect={setSelectedGame}
                     isInstalled={isInstalled}
                     hasUpdate={hasUpdate}
                     downloadStatus={dl.status}
@@ -162,6 +182,17 @@ export default function LibraryView() {
             );
         })}
       </div>
+
+      {selectedGame && (
+        <GameDetailModal
+            game={selectedGame}
+            isOpen={true}
+            onClose={() => setSelectedGame(null)}
+            onDownload={handleDownload}
+            onInstall={handleInstall}
+            statusProps={getSelectedGameStatus()}
+        />
+      )}
     </section>
   );
 }
