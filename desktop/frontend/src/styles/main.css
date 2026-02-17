@@ -1677,7 +1677,8 @@
       .statusbar-right {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
+        flex-shrink: 0;
       }
       .statusbar-dot {
         width: 6px;
@@ -1687,6 +1688,61 @@
       }
       .statusbar-dot.connected {
         background: var(--success);
+      }
+
+      .statusbar-center {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .statusbar-download-label {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.68rem;
+        color: var(--text-1);
+      }
+      .statusbar-download-progress {
+        flex: 1;
+        min-width: 60px;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(45, 63, 93, 0.6);
+        overflow: hidden;
+      }
+      .statusbar-download-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), #60acfc);
+        transition: width 300ms ease-out;
+      }
+      .statusbar-download-pct {
+        flex-shrink: 0;
+        font-size: 0.68rem;
+        color: var(--text-1);
+        font-variant-numeric: tabular-nums;
+      }
+      .statusbar-queue-btn {
+        background: transparent !important;
+        border: none !important;
+        padding: 4px 8px !important;
+        min-height: auto !important;
+        font-size: 0.72rem !important;
+        color: var(--text-2) !important;
+        cursor: pointer;
+        border-radius: 6px !important;
+        transition: background 150ms ease, color 150ms ease;
+      }
+      .statusbar-queue-btn:hover {
+        background: rgba(90, 163, 255, 0.12) !important;
+        color: var(--text-1) !important;
+        transform: none;
       }
 
       /* Installed apps filter */
