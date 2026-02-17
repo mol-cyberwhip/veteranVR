@@ -640,6 +640,16 @@
         color: #ffffff;
         background: linear-gradient(160deg, rgba(80, 150, 236, 0.95), rgba(45, 107, 192, 0.98));
         border-color: rgba(110, 180, 255, 0.62);
+        box-shadow: 0 2px 12px rgba(90, 163, 255, 0.3);
+        transform: scale(1.04);
+      }
+
+      .filter-chip:not(.active) {
+        opacity: 0.7;
+      }
+
+      .filter-chip:not(.active):hover {
+        opacity: 1;
       }
 
       .library-filters {
