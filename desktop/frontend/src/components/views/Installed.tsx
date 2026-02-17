@@ -52,10 +52,11 @@ export default function InstalledView() {
     }
   };
 
-  const renderAppList = (apps: any[], title: string) => {
+  const renderAppList = (apps: any[], title: string, variant?: string) => {
     if (apps.length === 0) return null;
+    const sectionClass = variant === 'updates' ? 'installed-section installed-section-updates' : 'installed-section';
     return (
-      <div className="installed-section">
+      <div className={sectionClass}>
         <div className="installed-section-title">{title} ({apps.length})</div>
         {apps.map((app: any) => {
             const pkg = app.package_name;
@@ -156,7 +157,7 @@ export default function InstalledView() {
               </div>
             )}
             
-            {renderAppList(updates, "Update Available")}
+            {renderAppList(updates, "Update Available", "updates")}
             {renderAppList(inCatalog, "In Catalog")}
             {renderAppList(others, "Other Installed Apps")}
           </div>

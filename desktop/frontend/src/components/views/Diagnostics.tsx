@@ -22,6 +22,7 @@ export default function DiagnosticsView() {
   const logEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [logFilter, setLogFilter] = useState<string>('all');
 
   const deviceConnected = deviceStatus?.status === 'connected' || deviceStatus?.status === 'multiple_connected';
   const deviceMsg = deviceStatus?.status_message || 'No device';
@@ -99,6 +100,18 @@ export default function DiagnosticsView() {
         <div className="diagnostics-logs-header">
           <h3 className="diagnostics-section-title">Internal Logs</h3>
           <div className="diagnostics-logs-controls">
+            <div className="log-level-filters">
+              {['all', 'error', 'warn', 'info'].map(level => (
+                <button
+                  key={level}
+                  type="button"
+                  className={`btn-sm log-filter-chip ${logFilter === level ? 'active' : ''}`}
+                  onClick={() => setLogFilter(level)}
+                >
+                  {level === 'all' ? 'All' : level.charAt(0).toUpperCase() + level.slice(1)}
+                </button>
+              ))}
+            </div>
             <label className="diagnostics-autoscroll">
               <input type="checkbox" checked={autoScroll} onChange={(e) => setAutoScroll(e.target.checked)} />
               Auto-scroll
@@ -115,7 +128,7 @@ export default function DiagnosticsView() {
           {entries.length === 0 && (
             <div className="log-empty">No log entries yet</div>
           )}
-          {entries.map((entry, i) => (
+          {entries.filter(e => logFilter === 'all' || e.level === logFilter).map((entry, i) => (
             <LogLine key={i} entry={entry} />
           ))}
           <div ref={logEndRef} />
