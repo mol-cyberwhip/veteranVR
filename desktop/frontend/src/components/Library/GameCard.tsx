@@ -6,6 +6,7 @@ interface GameCardProps {
   game: Game;
   onDownload: (pkg: string, releaseName?: string) => void;
   onInstall: (pkg: string, releaseName?: string) => void;
+  onSelect?: (game: Game) => void;
   isInstalled: boolean;
   hasUpdate: boolean;
   downloadStatus?: string; // "queued", "downloading", "completed"
@@ -13,8 +14,17 @@ interface GameCardProps {
   installStatus?: string; // e.g. "Installing...", "Extracting archives..."
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ game, onDownload, onInstall, isInstalled, hasUpdate, downloadStatus, downloadProgress, installStatus }) => {
-  const [expanded, setExpanded] = useState(false);
+export const GameCard: React.FC<GameCardProps> = ({ 
+  game, 
+  onDownload, 
+  onInstall, 
+  onSelect,
+  isInstalled, 
+  hasUpdate, 
+  downloadStatus, 
+  downloadProgress, 
+  installStatus 
+}) => {
   const [favorite, setFavorite] = useState(game.is_favorite);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | null>(null);
   const [selectedRelease] = useState<string | undefined>(game.release_name);
@@ -38,10 +48,13 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onDownload, onInstall,
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setFavorite(!favorite);
+    // Add favorite toggle logic here if needed via props or api call
   };
 
   const handleCardClick = () => {
-    setExpanded(!expanded);
+    if (onSelect) {
+      onSelect(game);
+    }
   };
 
   const handleAction = (e: React.MouseEvent) => {
@@ -70,7 +83,6 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onDownload, onInstall,
   };
 
   const isBusy = isInstalling || downloadStatus === 'downloading' || downloadStatus === 'queued';
-  const actionClass = 'install-accent';
 
   const badges = [];
   if (game.is_new) badges.push(<span key="new" className="badge badge-new">New</span>);
@@ -81,7 +93,7 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onDownload, onInstall,
   const fallbackLabel = (game.game_name || "?").substring(0, 2).toUpperCase();
 
   return (
-    <div className={`game-card ${expanded ? 'expanded' : ''}`} onClick={handleCardClick} data-package={game.package_name}>
+    <div className="game-card" onClick={handleCardClick} data-package={game.package_name}>
       <div className="card-thumb">
         {thumbnailSrc ? (
             <img src={thumbnailSrc} alt="" />
@@ -115,40 +127,6 @@ export const GameCard: React.FC<GameCardProps> = ({ game, onDownload, onInstall,
       </div>
 
       <div className="card-meta">{(!game.size || game.size === "0" || game.size === "0 MB") ? "Size unknown" : game.size} | v{game.version_code || ""}</div>
-
-      {expanded && (
-        <div className="card-expanded">
-          <div className="card-expanded-block card-expanded-package">
-            <span className="card-expanded-label">Package</span>
-            <span className="card-expanded-value">{game.package_name}</span>
-          </div>
-
-          <div className="card-expanded-block">
-             <span className="card-expanded-label">Downloads</span>
-             <span className="card-expanded-value">{game.downloads}</span>
-          </div>
-
-          <div className="card-expanded-actions">
-            <button
-                type="button"
-                className={`${actionClass}${isInstalling ? ' btn-installing' : ''}`}
-                onClick={handleAction}
-                disabled={isBusy}
-            >
-                {isInstalling && <span className="btn-spinner" />}
-                {getActionLabel()}
-            </button>
-            <button
-                type="button"
-                className="btn-secondary btn-sm"
-                onClick={(e) => { e.stopPropagation(); onDownload(game.package_name, selectedRelease); }}
-                disabled={isBusy || downloadStatus === 'completed'}
-            >
-                Download Only
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
