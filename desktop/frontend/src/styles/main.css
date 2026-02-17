@@ -2226,7 +2226,7 @@
         color: var(--text-2);
         text-align: center;
         padding: 20px 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: BlinkMacSystemFont, "Segoe UI", sans-serif;
         font-size: 0.78rem;
       }
       .log-line {
