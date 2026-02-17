@@ -42,7 +42,7 @@
 
       body {
         margin: 0;
-        font-family: BlinkMacSystemFont, "Avenir Next", "IBM Plex Sans", "Segoe UI", sans-serif;
+        font-family: "Inter", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         color: var(--text-0);
         background:
           radial-gradient(1200px 800px at -18% -20%, rgba(90, 163, 255, 0.26), transparent 52%),
@@ -2226,7 +2226,7 @@
         color: var(--text-2);
         text-align: center;
         padding: 20px 0;
-        font-family: BlinkMacSystemFont, "Segoe UI", sans-serif;
+        font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         font-size: 0.78rem;
       }
       .log-line {
