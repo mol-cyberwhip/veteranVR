@@ -253,8 +253,8 @@ for alias in "${REQUESTED[@]}"; do
         rm -rf "$ARTIFACT_DIR"
         mkdir -p "$ARTIFACT_DIR"
 
-        BUNDLE_DIR="$PROJECT_DIR/src-tauri/target/${triple}/release/bundle"
-        BIN_DIR="$PROJECT_DIR/src-tauri/target/${triple}/release"
+        BUNDLE_DIR="$PROJECT_DIR/target/${triple}/release/bundle"
+        BIN_DIR="$PROJECT_DIR/target/${triple}/release"
 
         case "$alias" in
             mac-arm|mac-x86)
