@@ -531,15 +531,15 @@
       button,
       .view-btn,
       .filter-chip {
-        border: 1px solid transparent;
+        border: 1px solid rgba(66, 87, 121, 0.72);
         border-radius: 10px;
         padding: 8px 12px;
         min-height: 34px;
         font-size: 0.78rem;
         font-weight: 650;
         letter-spacing: 0.01em;
-        color: #e7f1ff;
-        background: linear-gradient(160deg, rgba(74, 136, 216, 0.92), rgba(45, 102, 183, 0.95));
+        color: #b9c8e2;
+        background: linear-gradient(155deg, rgba(37, 53, 81, 0.88), rgba(28, 40, 62, 0.95));
         cursor: pointer;
         transition: transform 140ms ease, filter 140ms ease, box-shadow 180ms ease;
       }
@@ -566,34 +566,7 @@
         transform: none;
       }
 
-      button:nth-child(2n),
-      .actions button:nth-child(2n),
-      .view-btn,
-      .filter-chip {
-        background: linear-gradient(155deg, rgba(37, 53, 81, 0.88), rgba(28, 40, 62, 0.95));
-        border-color: rgba(66, 87, 121, 0.72);
-        color: #b9c8e2;
-      }
-
-      button#recover-button,
-      button#cancel-install-button,
-      button#download-cancel-active-button,
-      button#cancel-op-button,
-      button#delete-files-button,
-      button#uninstall-button,
-      button#log-reset-button,
-      button#crash-dismiss-button {
-        background: linear-gradient(160deg, rgba(210, 84, 103, 0.85), rgba(173, 57, 74, 0.94));
-        border-color: rgba(239, 143, 154, 0.35);
-        color: #fff2f4;
-      }
-
-      button.install-accent,
-      button#install-game-button,
-      button#start-download-processing-button,
-      button#backup-app-button,
-      button#bulk-backup-button,
-      button#update-app-button {
+      button.install-accent {
         background: linear-gradient(160deg, rgba(43, 156, 117, 0.86), rgba(30, 123, 92, 0.94));
         border-color: rgba(96, 223, 174, 0.35);
         color: #eafff4;

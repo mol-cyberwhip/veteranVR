@@ -111,9 +111,10 @@ export default function LibraryView() {
               <option value="date">Sort: Date</option>
               <option value="size">Sort: Size</option>
             </select>
-            <button 
-                id="library-sort-dir-button" 
-                type="button" 
+            <button
+                id="library-sort-dir-button"
+                type="button"
+                className="btn-primary btn-icon"
                 title="Toggle sort direction"
                 onClick={() => setSortAsc(!sortAsc)}
             >

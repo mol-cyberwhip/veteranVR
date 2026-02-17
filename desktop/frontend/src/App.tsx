@@ -83,7 +83,7 @@ function App() {
           <button
             id="sidebar-refresh-device-button"
             type="button"
-            className="sidebar-refresh-btn"
+            className="sidebar-refresh-btn btn-primary"
             onClick={refreshDevice}
           >Refresh Device</button>
         </div>
