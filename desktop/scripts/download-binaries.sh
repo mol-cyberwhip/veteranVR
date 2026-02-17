@@ -6,7 +6,8 @@ set -euo pipefail
 # Example: ./scripts/download-binaries.sh aarch64-apple-darwin
 
 TARGET="${1:-}"
-BINDIR="$(cd "$(dirname "$0")/../src-tauri/binaries" && pwd)"
+BINDIR="$(cd "$(dirname "$0")/.." && pwd)/src-tauri/binaries"
+mkdir -p "$BINDIR"
 
 # Check for --force flag
 FORCE=false
