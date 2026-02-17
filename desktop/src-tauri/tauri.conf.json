@@ -33,6 +33,7 @@
   },
   "bundle": {
     "active": true,
+    "targets": ["dmg", "app", "deb", "appimage", "nsis"],
     "externalBin": [
       "binaries/adb",
       "binaries/rclone",

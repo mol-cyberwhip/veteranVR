@@ -43,6 +43,12 @@ export const api = {
     return assertCatalogStatusSnapshot(payload);
   },
 
+  searchYoutubeTrailer: async (gameName: string) => {
+    const result = await commands.searchYoutubeTrailer(gameName);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
+
   getLibrary: async (query = "", sortBy = "popularity", sortAscending = true, filter = "all", limit = 500, offset = 0) => {
     const payload = await invoke("backend_catalog_library", {
       query,
@@ -63,6 +69,12 @@ export const api = {
         exists: !!payload?.thumbnail_exists,
         path: payload?.thumbnail_path ? String(payload.thumbnail_path) : ""
     };
+  },
+
+  getGameNote: async (packageName: string) => {
+    const result = await commands.backendCatalogNote(packageName);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
   },
 
   convertFileSrc: (path: string) => {

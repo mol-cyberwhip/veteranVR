@@ -77,6 +77,14 @@ async backendCatalogSearch(query: string | null, limit: number | null, offset: n
     else return { status: "error", error: e  as any };
 }
 },
+async searchYoutubeTrailer(gameName: string) : Promise<Result<string | null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("search_youtube_trailer", { gameName }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async backendCatalogGameDetail(packageName: string) : Promise<Result<CatalogGameDetail, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("backend_catalog_game_detail", { packageName }) };
