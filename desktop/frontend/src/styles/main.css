@@ -173,7 +173,10 @@
         display: flex;
         flex-direction: column;
         gap: 14px;
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(90, 163, 255, 0.2) transparent;
       }
 
       .sidebar-group {
@@ -186,7 +189,7 @@
       .sidebar-label {
         display: block;
         margin-bottom: 8px;
-        font-size: 0.64rem;
+        font-size: 0.72rem;
         letter-spacing: 0.11em;
         text-transform: uppercase;
         color: #7385a8;
@@ -321,6 +324,44 @@
         gap: 8px;
       }
 
+      .sidebar-wireless-group[open] {
+        padding-bottom: 10px;
+      }
+
+      .sidebar-wireless-summary {
+        list-style: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0;
+        margin-bottom: 0;
+        user-select: none;
+      }
+
+      .sidebar-wireless-summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .sidebar-wireless-summary .sidebar-label {
+        margin-bottom: 0;
+        pointer-events: none;
+      }
+
+      .sidebar-wireless-group .sidebar-wireless-input {
+        margin-top: 8px;
+      }
+
+      .sidebar-wireless-chevron {
+        font-size: 0.65rem;
+        color: #7385a8;
+        transition: transform 200ms ease;
+      }
+
+      .sidebar-wireless-group[open] .sidebar-wireless-chevron {
+        transform: rotate(90deg);
+      }
+
       .sidebar-wireless-input {
         width: 100%;
         min-height: 30px;
@@ -356,7 +397,7 @@
         display: flex;
         align-items: center;
         gap: 6px;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         color: var(--text-2);
       }
 
@@ -469,7 +510,7 @@
 
       .ops-title {
         margin: 0;
-        font-size: 0.97rem;
+        font-size: 1.15rem;
         letter-spacing: 0.015em;
         font-weight: 640;
         color: #eef4ff;
@@ -485,7 +526,7 @@
 
       .panel-subtitle {
         margin: 4px 0 0;
-        font-size: 0.78rem;
+        font-size: 0.82rem;
         color: var(--text-2);
       }
 
@@ -531,15 +572,15 @@
       button,
       .view-btn,
       .filter-chip {
-        border: 1px solid transparent;
+        border: 1px solid rgba(66, 87, 121, 0.72);
         border-radius: 10px;
         padding: 8px 12px;
         min-height: 34px;
         font-size: 0.78rem;
         font-weight: 650;
         letter-spacing: 0.01em;
-        color: #e7f1ff;
-        background: linear-gradient(160deg, rgba(74, 136, 216, 0.92), rgba(45, 102, 183, 0.95));
+        color: #b9c8e2;
+        background: linear-gradient(155deg, rgba(37, 53, 81, 0.88), rgba(28, 40, 62, 0.95));
         cursor: pointer;
         transition: transform 140ms ease, filter 140ms ease, box-shadow 180ms ease;
       }
@@ -566,34 +607,7 @@
         transform: none;
       }
 
-      button:nth-child(2n),
-      .actions button:nth-child(2n),
-      .view-btn,
-      .filter-chip {
-        background: linear-gradient(155deg, rgba(37, 53, 81, 0.88), rgba(28, 40, 62, 0.95));
-        border-color: rgba(66, 87, 121, 0.72);
-        color: #b9c8e2;
-      }
-
-      button#recover-button,
-      button#cancel-install-button,
-      button#download-cancel-active-button,
-      button#cancel-op-button,
-      button#delete-files-button,
-      button#uninstall-button,
-      button#log-reset-button,
-      button#crash-dismiss-button {
-        background: linear-gradient(160deg, rgba(210, 84, 103, 0.85), rgba(173, 57, 74, 0.94));
-        border-color: rgba(239, 143, 154, 0.35);
-        color: #fff2f4;
-      }
-
-      button.install-accent,
-      button#install-game-button,
-      button#start-download-processing-button,
-      button#backup-app-button,
-      button#bulk-backup-button,
-      button#update-app-button {
+      button.install-accent {
         background: linear-gradient(160deg, rgba(43, 156, 117, 0.86), rgba(30, 123, 92, 0.94));
         border-color: rgba(96, 223, 174, 0.35);
         color: #eafff4;
@@ -667,6 +681,16 @@
         color: #ffffff;
         background: linear-gradient(160deg, rgba(80, 150, 236, 0.95), rgba(45, 107, 192, 0.98));
         border-color: rgba(110, 180, 255, 0.62);
+        box-shadow: 0 2px 12px rgba(90, 163, 255, 0.3);
+        transform: scale(1.04);
+      }
+
+      .filter-chip:not(.active) {
+        opacity: 0.7;
+      }
+
+      .filter-chip:not(.active):hover {
+        opacity: 1;
       }
 
       .library-filters {
@@ -702,7 +726,7 @@
         align-items: center;
         border-radius: 7px;
         padding: 2px 7px;
-        font-size: 0.64rem;
+        font-size: 0.68rem;
         font-weight: 650;
         letter-spacing: 0.035em;
         text-transform: uppercase;
@@ -741,17 +765,26 @@
         cursor: pointer;
         transition: transform 180ms ease, box-shadow 190ms ease, border-color 190ms ease;
         align-content: start;
+        min-width: 0;
+        overflow: hidden;
       }
 
       .game-card:hover {
         transform: translateY(-3px) scale(1.01);
         border-color: rgba(95, 138, 200, 0.95);
         box-shadow: 0 22px 35px rgba(7, 14, 27, 0.52);
+        z-index: 2;
       }
 
       .game-card.expanded {
         border-color: rgba(95, 138, 200, 0.95);
         box-shadow: 0 22px 35px rgba(7, 14, 27, 0.52);
+        z-index: 2;
+        transform: none;
+      }
+
+      .game-card.expanded:hover {
+        transform: none;
       }
 
       .card-thumb {
@@ -798,16 +831,84 @@
         right: 5px;
         display: inline-flex;
         gap: 4px;
+        z-index: 1;
+      }
+
+      .card-hover-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 8px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 100%);
+        opacity: 0;
+        transition: opacity 200ms ease;
+        z-index: 2;
+        border-radius: inherit;
+      }
+
+      .game-card:hover .card-hover-overlay {
+        opacity: 1;
+      }
+
+      .card-hover-action {
+        width: 100%;
+        padding: 6px 12px !important;
+        min-height: 30px !important;
+        font-size: 0.74rem !important;
+        border-radius: 8px !important;
+        text-align: center;
+        transform: translateY(4px);
+        transition: transform 200ms ease, opacity 200ms ease;
+        opacity: 0;
+      }
+
+      .game-card:hover .card-hover-action {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      .card-hover-action.busy {
+        opacity: 0.7;
+        cursor: default;
+      }
+
+      .card-inline-progress {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 3;
+        border-radius: 0 0 10px 10px;
+        overflow: hidden;
+      }
+
+      .card-inline-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent), #60acfc);
+        transition: width 300ms ease-out;
+        position: relative;
+      }
+
+      .card-inline-progress-fill::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shimmer 1.3s linear infinite;
       }
 
       .card-title {
-        font-size: 0.84rem;
+        font-size: 0.9rem;
         font-weight: 640;
       }
 
       .card-meta {
         color: #8fa5c8;
-        font-size: 0.73rem;
+        font-size: 0.76rem;
         min-height: 18px;
       }
 
@@ -871,6 +972,7 @@
         display: flex;
         flex-direction: column;
         gap: 6px;
+        min-width: 0;
       }
 
       .card-expanded-block {
@@ -878,12 +980,13 @@
         border-radius: 10px;
         border: 1px solid rgba(51, 69, 98, 0.72);
         background: rgba(14, 22, 36, 0.75);
+        min-width: 0;
       }
 
       .card-expanded-label {
         display: block;
         margin-bottom: 2px;
-        font-size: 0.63rem;
+        font-size: 0.68rem;
         text-transform: uppercase;
         letter-spacing: 0.045em;
         color: #8193b4;
@@ -893,9 +996,13 @@
       .card-expanded-value {
         font-size: 0.79rem;
         color: #dce8ff;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .card-expanded-package {
+        overflow: hidden;
       }
 
       .card-expanded-package .card-expanded-value {
@@ -907,6 +1014,15 @@
         display: flex;
         flex-wrap: wrap;
         gap: 6px;
+        min-width: 0;
+      }
+
+      .card-expanded-actions button {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
 
       .card-expanded-status {
@@ -1405,14 +1521,32 @@
       }
 
       /* Installed apps list */
+      .installed-section {
+        margin-bottom: 6px;
+      }
       .installed-section-title {
-        font-size: 0.72rem;
+        font-size: 0.76rem;
         font-weight: 700;
         color: var(--text-2);
         text-transform: uppercase;
         letter-spacing: 0.04em;
         margin: 14px 0 8px 4px;
         opacity: 0.85;
+      }
+      .installed-section-updates {
+        border-left: 3px solid var(--warn);
+        padding-left: 10px;
+        border-radius: 2px;
+      }
+      .installed-section-updates .installed-section-title {
+        color: var(--warn);
+        opacity: 1;
+      }
+      .installed-section-updates .installed-item {
+        border-color: rgba(244, 181, 72, 0.25);
+      }
+      .installed-section-updates .installed-item:hover {
+        border-color: rgba(244, 181, 72, 0.5);
       }
       .installed-size-tag {
         color: rgba(220, 232, 255, 0.55);
@@ -1585,7 +1719,8 @@
       .statusbar-right {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 8px;
+        flex-shrink: 0;
       }
       .statusbar-dot {
         width: 6px;
@@ -1595,6 +1730,61 @@
       }
       .statusbar-dot.connected {
         background: var(--success);
+      }
+
+      .statusbar-center {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        max-width: 400px;
+        margin: 0 auto;
+      }
+      .statusbar-download-label {
+        flex-shrink: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.68rem;
+        color: var(--text-1);
+      }
+      .statusbar-download-progress {
+        flex: 1;
+        min-width: 60px;
+        height: 3px;
+        border-radius: 999px;
+        background: rgba(45, 63, 93, 0.6);
+        overflow: hidden;
+      }
+      .statusbar-download-progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, var(--accent), #60acfc);
+        transition: width 300ms ease-out;
+      }
+      .statusbar-download-pct {
+        flex-shrink: 0;
+        font-size: 0.68rem;
+        color: var(--text-1);
+        font-variant-numeric: tabular-nums;
+      }
+      .statusbar-queue-btn {
+        background: transparent !important;
+        border: none !important;
+        padding: 4px 8px !important;
+        min-height: auto !important;
+        font-size: 0.72rem !important;
+        color: var(--text-2) !important;
+        cursor: pointer;
+        border-radius: 6px !important;
+        transition: background 150ms ease, color 150ms ease;
+      }
+      .statusbar-queue-btn:hover {
+        background: rgba(90, 163, 255, 0.12) !important;
+        color: var(--text-1) !important;
+        transform: none;
       }
 
       /* Installed apps filter */
@@ -1660,7 +1850,7 @@
 
       /* Installed name update highlight */
       .installed-name.has-update {
-        color: var(--accent);
+        color: var(--warn);
       }
 
       /* Empty state */
@@ -1827,6 +2017,21 @@
         display: flex;
         gap: 6px;
       }
+      .download-completed-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--success);
+        font-weight: 640;
+        font-size: 0.74rem;
+      }
+      .download-completed-badge::before {
+        content: "\2713";
+        font-size: 0.8rem;
+      }
+      .download-completed-size {
+        color: var(--text-2);
+      }
 
       /* Backup view */
       .backup-create-card {
@@ -1976,6 +2181,25 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        flex-wrap: wrap;
+      }
+      .log-level-filters {
+        display: flex;
+        gap: 3px;
+        margin-right: 4px;
+      }
+      .log-filter-chip {
+        padding: 2px 8px !important;
+        min-height: 24px !important;
+        font-size: 0.66rem !important;
+        border-radius: 999px !important;
+        opacity: 0.6;
+      }
+      .log-filter-chip.active {
+        opacity: 1;
+        background: linear-gradient(160deg, rgba(80, 150, 236, 0.95), rgba(45, 107, 192, 0.98)) !important;
+        border-color: rgba(110, 180, 255, 0.62) !important;
+        color: #fff !important;
       }
       .diagnostics-autoscroll {
         display: flex;
@@ -2008,8 +2232,13 @@
       .log-line {
         display: flex;
         gap: 8px;
-        padding: 1px 0;
+        padding: 2px 6px;
         white-space: nowrap;
+        border-left: 3px solid transparent;
+        border-radius: 2px;
+      }
+      .log-line:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
       }
       .log-line:hover {
         background: rgba(90, 163, 255, 0.06);
@@ -2028,8 +2257,16 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
+      .log-level-warn {
+        border-left-color: var(--warn);
+        background: rgba(244, 181, 72, 0.04);
+      }
       .log-level-warn .log-msg {
         color: var(--warn);
+      }
+      .log-level-error {
+        border-left-color: var(--danger);
+        background: rgba(241, 115, 127, 0.06);
       }
       .log-level-error .log-msg {
         color: var(--danger);
@@ -2039,11 +2276,12 @@
       }
       .log-repeat {
         flex-shrink: 0;
-        padding: 0 5px;
+        padding: 1px 7px;
         border-radius: 999px;
-        background: rgba(90, 163, 255, 0.2);
-        color: #a0c4f0;
+        background: rgba(241, 115, 127, 0.2);
+        color: var(--danger);
         font-size: 0.65rem;
+        font-weight: 700;
         line-height: 1.6;
       }
 

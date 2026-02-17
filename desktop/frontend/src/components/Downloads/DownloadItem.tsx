@@ -25,26 +25,36 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
       <div className="download-item-header">
         <span className="download-item-name">{name}</span>
         <span className="download-item-status">
-            {item.status} {item.speed ? `(${item.speed})` : ''}
+            {isCompleted ? (
+              <span className="download-completed-badge">Ready to install</span>
+            ) : (
+              <>{item.status} {item.speed ? `(${item.speed})` : ''}</>
+            )}
         </span>
       </div>
 
-      <div className="download-item-progress-bar">
-        <div
-          className="download-item-progress-fill"
-          style={{ width: `${item.progress_percent}%` }}
-        />
-      </div>
+      {!isCompleted && (
+        <div className="download-item-progress-bar">
+          <div
+            className="download-item-progress-fill"
+            style={{ width: `${item.progress_percent}%` }}
+          />
+        </div>
+      )}
 
       <div className="download-item-info">
         <span className="download-item-percent">
-          {item.progress_percent.toFixed(1)}%{item.eta ? ` - ETA: ${item.eta}` : ''}
+          {isCompleted ? (
+            <span className="download-completed-size">{game?.size || 'Download complete'}</span>
+          ) : (
+            <>{item.progress_percent.toFixed(1)}%{item.eta ? ` - ETA: ${item.eta}` : ''}{isDownloading && item.speed ? ` - ${item.speed}` : ''}</>
+          )}
         </span>
         <div className="download-item-actions">
             {isDownloading && (
                 <button
                     onClick={() => onPause(item.package_name)}
-                    className="btn-sm"
+                    className="btn-sm btn-secondary"
                 >
                     Pause
                 </button>
@@ -52,7 +62,7 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
             {isPaused && (
                 <button
                     onClick={() => onResume(item.package_name)}
-                    className="btn-sm"
+                    className="btn-sm btn-primary"
                 >
                     Resume
                 </button>
@@ -60,7 +70,7 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
             {isCompleted && (
                 <button
                     onClick={() => onInstall(item.package_name)}
-                    className="btn-sm install-accent"
+                    className="btn-sm btn-success"
                 >
                     Install
                 </button>
@@ -68,7 +78,7 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
             {isFailed && (
                 <button
                     onClick={() => onRetry(item.package_name)}
-                    className="btn-sm"
+                    className="btn-sm btn-primary"
                 >
                     Retry
                 </button>

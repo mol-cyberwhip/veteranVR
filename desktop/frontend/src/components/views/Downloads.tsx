@@ -98,7 +98,7 @@ export default function DownloadsView() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           {pendingDownloads.length > 0 && (
-            <button id="start-download-processing-button" type="button" onClick={handleStartProcessing}>Start Processing</button>
+            <button id="start-download-processing-button" type="button" className="btn-success" onClick={handleStartProcessing}>Start Processing</button>
           )}
           <button type="button" className="btn-secondary" onClick={handleOpenFolder}>Open Downloads Folder</button>
         </div>

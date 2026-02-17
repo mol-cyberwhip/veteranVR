@@ -34,6 +34,7 @@ function App() {
   const deviceClass = deviceConnected ? "sidebar-device-status connected" : "sidebar-device-status disconnected";
 
   const queueCount = downloadQueue?.queue?.length || 0;
+  const activeDownload = downloadQueue?.active_download;
 
   const getBadge = (id: string) => {
     if (id === 'download-view' && queueCount > 0) return queueCount;
@@ -83,13 +84,16 @@ function App() {
           <button
             id="sidebar-refresh-device-button"
             type="button"
-            className="sidebar-refresh-btn"
+            className="sidebar-refresh-btn btn-primary"
             onClick={refreshDevice}
           >Refresh Device</button>
         </div>
 
-        <div className="sidebar-group sidebar-wireless-group">
-          <span className="sidebar-label">Wireless ADB</span>
+        <details className="sidebar-group sidebar-wireless-group">
+          <summary className="sidebar-wireless-summary">
+            <span className="sidebar-label">Wireless ADB</span>
+            <span className="sidebar-wireless-chevron">&#9654;</span>
+          </summary>
           <input id="sidebar-wireless-endpoint" type="text" placeholder="192.168.1.20:5555" className="sidebar-wireless-input" />
           <div className="sidebar-wireless-actions">
             <button id="sidebar-wireless-connect-button" type="button" className="sidebar-wireless-btn">Connect</button>
@@ -100,7 +104,7 @@ function App() {
             <input id="sidebar-wireless-auto-reconnect" type="checkbox" />
             Auto-reconnect
           </label>
-        </div>
+        </details>
       </aside>
 
       <main className="workspace">
@@ -111,10 +115,37 @@ function App() {
       <footer className="statusbar" id="statusbar">
         <div className="statusbar-left">
           <span className={`statusbar-dot ${deviceConnected ? 'connected' : ''}`} id="statusbar-device-dot"></span>
-          <span id="statusbar-device-text">{deviceConnected ? "Device Connected" : "No device"}</span>
+          <span id="statusbar-device-text">
+            {deviceConnected ? (deviceStatus?.status_message || "Device Connected") : "No device"}
+          </span>
         </div>
+
+        {activeDownload && (
+          <div className="statusbar-center">
+            <span className="statusbar-download-label">
+              {activeDownload.game_name || activeDownload.package_name}
+            </span>
+            <div className="statusbar-download-progress">
+              <div
+                className="statusbar-download-progress-fill"
+                style={{ width: `${activeDownload.progress_percent || 0}%` }}
+              />
+            </div>
+            <span className="statusbar-download-pct">
+              {(activeDownload.progress_percent || 0).toFixed(0)}%
+              {activeDownload.speed ? ` (${activeDownload.speed})` : ''}
+            </span>
+          </div>
+        )}
+
         <div className="statusbar-right">
-          <span id="statusbar-queue-count">Queue: {queueCount}</span>
+          <button
+            type="button"
+            className="statusbar-queue-btn"
+            onClick={() => setActiveTab('download-view')}
+          >
+            Queue: {queueCount}
+          </button>
         </div>
       </footer>
     </div>
