@@ -88,8 +88,11 @@ function App() {
           >Refresh Device</button>
         </div>
 
-        <div className="sidebar-group sidebar-wireless-group">
-          <span className="sidebar-label">Wireless ADB</span>
+        <details className="sidebar-group sidebar-wireless-group">
+          <summary className="sidebar-wireless-summary">
+            <span className="sidebar-label">Wireless ADB</span>
+            <span className="sidebar-wireless-chevron">&#9654;</span>
+          </summary>
           <input id="sidebar-wireless-endpoint" type="text" placeholder="192.168.1.20:5555" className="sidebar-wireless-input" />
           <div className="sidebar-wireless-actions">
             <button id="sidebar-wireless-connect-button" type="button" className="sidebar-wireless-btn">Connect</button>
@@ -100,7 +103,7 @@ function App() {
             <input id="sidebar-wireless-auto-reconnect" type="checkbox" />
             Auto-reconnect
           </label>
-        </div>
+        </details>
       </aside>
 
       <main className="workspace">
