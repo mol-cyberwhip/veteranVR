@@ -1975,6 +1975,21 @@
         display: flex;
         gap: 6px;
       }
+      .download-completed-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        color: var(--success);
+        font-weight: 640;
+        font-size: 0.74rem;
+      }
+      .download-completed-badge::before {
+        content: "\2713";
+        font-size: 0.8rem;
+      }
+      .download-completed-size {
+        color: var(--text-2);
+      }
 
       /* Backup view */
       .backup-create-card {
