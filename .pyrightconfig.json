@@ -1,5 +1,5 @@
 {
-  "include": ["src", "tests", "desktop/e2e", "test_tauri_driving"],
+  "include": ["src", "tests", "veteran-desktop/e2e", "test_tauri_driving"],
   "exclude": ["rookie", "**/node_modules", "**/__pycache__"],
   "stubPath": "",
   "pythonVersion": "3.11",
