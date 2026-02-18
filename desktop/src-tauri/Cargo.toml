@@ -1,6 +1,6 @@
 [package]
 name = "veteran-desktop"
-version = "0.1.2"
+version = "0.1.3"
 description = "Veteran desktop shell bootstrap"
 edition = "2021"
 
