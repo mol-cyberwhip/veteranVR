@@ -52,6 +52,7 @@ Located in `frontend/`, the frontend is a modern React application:
 -   **Tauri-Specta Bindings**: Type-safe IPC client generated from the Rust commands.
 -   **State Management**: Centralized `AppContext` for application-wide state (devices, downloads, settings).
 -   **Modular UI**: Component-based views for Library, Downloads, Backups, and Diagnostics.
+-   **CSS Modules**: Scoped, component-level styling with CSS Modules (`.module.css` files) for maintainable styles.
 
 ## 🛠 Prerequisites
 
@@ -86,7 +87,7 @@ Located in `frontend/`, the frontend is a modern React application:
     cd src-tauri
     cargo test generate_bindings
     ```
-    This will regenerate `src/bindings.ts` (also copied to `frontend/src/bindings.ts`).
+    Bindings are generated directly to `frontend/src/bindings.ts`.
     
     **Important**: Always regenerate bindings when you:
     - Add, remove, or rename IPC commands in `src/ipc/commands.rs`
@@ -118,8 +119,12 @@ The frontend uses TypeScript with Vite for fast development and type checking:
 ├── frontend/               # React frontend source
 │   ├── src/
 │   │   ├── components/     # UI views and widgets
+│   │   │   ├── Library/    # GameCard, GameDetailModal (with .module.css)
+│   │   │   ├── Downloads/  # DownloadItem (with .module.css)
+│   │   │   └── views/      # Library, Downloads, Backups, etc. (with .module.css)
 │   │   ├── context/        # State management (AppContext)
 │   │   ├── services/       # API wrappers
+│   │   ├── styles/         # Global CSS (global.css)
 │   │   └── bindings.ts     # Auto-generated IPC client
 ├── src-tauri/              # Rust backend source
 │   ├── src/
@@ -150,6 +155,6 @@ For convenience, several build scripts are provided:
 When adding new features:
 1.  Implement the logic in a new or existing service in `src-tauri/src/services/`.
 2.  Expose the service via a command in `src-tauri/src/ipc/commands.rs`.
-3.  Run `cargo test --lib generate_bindings` to sync the frontend client.
-4.  Copy the updated bindings: `cp src/bindings.ts frontend/src/bindings.ts`
-5.  Implement the UI component in `frontend/src/components/` and wire it up in `App.tsx` or its respective view.
+3.  Run `cargo test --lib generate_bindings` to regenerate TypeScript bindings (written to `frontend/src/bindings.ts`).
+4.  Implement the UI component in `frontend/src/components/` with a corresponding `.module.css` file for styling.
+5.  Wire the component up in `App.tsx` or its respective view.
