@@ -2,12 +2,15 @@ package dev.veteran.quest.app.data
 
 import dev.veteran.quest.catalog.CatalogParser
 import dev.veteran.quest.catalog.CatalogQueryEngine
+import dev.veteran.quest.catalog.RemoteCatalogPlanner
 import dev.veteran.quest.installer.UninstallOptions
 import dev.veteran.quest.model.Game
 import dev.veteran.quest.model.LibraryQuery
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 private const val BOOTSTRAP_CATALOG = """
 Game Name;Release Name;Package Name;Version Code;Last Updated;Size (MB);Downloads;Rating;Rating Count
@@ -17,20 +20,31 @@ Dungeons of Eternity;Dungeons of Eternity v75+1.2.1;com.othergate.dungeonsofeter
 Puzzling Places;Puzzling Places v150+2.6.0;com.realitiesio.puzzlingplaces;150;2025-10-03 04:01 UTC;1700;95.4;0;0
 """
 
-class BootstrapQuestRepository : QuestRepository {
+class BootstrapQuestRepository(
+    private val remote: QuestRemoteDataSource = QuestRemoteDataSource(),
+) : QuestRepository {
     private val lock = Mutex()
     private var dataset = CatalogParser.parseGameList(BOOTSTRAP_CATALOG.trimIndent())
 
     override suspend fun syncCatalog(force: Boolean): Result<Int> {
-        delay(350)
-        return lock.withLock {
-            // Initial scaffold: this uses a baked-in catalog so UI flow is ready while
-            // download/extract/install internals are implemented in subsequent steps.
-            if (force) {
-                // Force path is a no-op for the bootstrap repository.
+        delay(150)
+        return withContext(Dispatchers.IO) {
+            runCatching {
+                val config = remote.fetchPublicConfig()
+                val metaUrl = RemoteCatalogPlanner.metaArchiveUrl(config.baseUri)
+                // Temporary real-network check: this confirms remote config and base URI are reachable
+                // with expected headers while download/extract implementation is being built.
+                remote.fetchText(config.baseUri)
+                check(remote.headExists(metaUrl)) { "meta.7z not reachable at $metaUrl" }
+
+                lock.withLock {
+                    if (force) {
+                        // TODO: force will trigger full cache bust once local cache is implemented.
+                    }
+                    dataset = CatalogParser.parseGameList(BOOTSTRAP_CATALOG.trimIndent())
+                    dataset.latestGames.size
+                }
             }
-            dataset = CatalogParser.parseGameList(BOOTSTRAP_CATALOG.trimIndent())
-            Result.success(dataset.latestGames.size)
         }
     }
 
