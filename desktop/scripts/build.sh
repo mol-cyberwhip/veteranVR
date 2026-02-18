@@ -46,12 +46,7 @@ fi
 echo -e "${GREEN}✓ Bindings regenerated${NC}"
 echo ""
 
-echo -e "${YELLOW}Step 3: Copying bindings to frontend...${NC}"
-cp ../src/bindings.ts ../frontend/src/bindings.ts
-echo -e "${GREEN}✓ Bindings copied${NC}"
-echo ""
-
-echo -e "${YELLOW}Step 4: Building frontend...${NC}"
+echo -e "${YELLOW}Step 3: Building frontend...${NC}"
 cd ../frontend
 npm run build
 if [ $? -ne 0 ]; then
@@ -61,9 +56,9 @@ fi
 echo -e "${GREEN}✓ Frontend built${NC}"
 echo ""
 
-echo -e "${YELLOW}Step 5: Building Tauri application...${NC}"
+echo -e "${YELLOW}Step 4: Building Tauri application...${NC}"
 cd ../src-tauri
-# Use --no-before-build-command since we already built the frontend in Step 4
+# Use --no-before-build-command since we already built the frontend in Step 3
 cargo tauri build --no-before-build-command
 if [ $? -ne 0 ]; then
     echo -e "${RED}Tauri build failed!${NC}"
