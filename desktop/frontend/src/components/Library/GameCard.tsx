@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Game } from '../../types';
 import { api } from '../../services/api';
+import styles from './GameCard.module.css';
 
 interface GameCardProps {
   game: Game;
@@ -14,16 +15,16 @@ interface GameCardProps {
   installStatus?: string; // e.g. "Installing...", "Extracting archives..."
 }
 
-export const GameCard: React.FC<GameCardProps> = ({ 
-  game, 
-  onDownload, 
-  onInstall, 
+export const GameCard: React.FC<GameCardProps> = ({
+  game,
+  onDownload,
+  onInstall,
   onSelect,
-  isInstalled, 
-  hasUpdate, 
-  downloadStatus, 
-  downloadProgress, 
-  installStatus 
+  isInstalled,
+  hasUpdate,
+  downloadStatus,
+  downloadProgress,
+  installStatus
 }) => {
   const [favorite, setFavorite] = useState(game.is_favorite);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | null>(null);
@@ -93,21 +94,21 @@ export const GameCard: React.FC<GameCardProps> = ({
   const fallbackLabel = (game.game_name || "?").substring(0, 2).toUpperCase();
 
   return (
-    <div className="game-card" onClick={handleCardClick} data-package={game.package_name}>
-      <div className="card-thumb">
+    <div className={styles['game-card']} onClick={handleCardClick} data-package={game.package_name}>
+      <div className={styles['card-thumb']}>
         {thumbnailSrc ? (
             <img src={thumbnailSrc} alt="" />
         ) : (
             <span data-thumb-fallback>{fallbackLabel}</span>
         )}
-        <button className={`card-fav ${favorite ? 'active' : ''}`} onClick={toggleFavorite}>
+        <button className={`${styles['card-fav']}${favorite ? ` ${styles['active']}` : ''}`} onClick={toggleFavorite}>
             {favorite ? '\u2665' : '\u2661'}
         </button>
-        <div className="card-badges">{badges}</div>
-        <div className="card-hover-overlay">
+        <div className={styles['card-badges']}>{badges}</div>
+        <div className={styles['card-hover-overlay']}>
           <button
             type="button"
-            className={`card-hover-action ${isBusy ? 'busy' : ''} ${(isInstalled || downloadStatus === 'completed') ? 'install-accent' : 'btn-primary'}`}
+            className={`${styles['card-hover-action']}${isBusy ? ` ${styles['busy']}` : ''} ${(isInstalled || downloadStatus === 'completed') ? 'install-accent' : 'btn-primary'}`}
             onClick={handleAction}
             disabled={isBusy}
           >
@@ -116,17 +117,17 @@ export const GameCard: React.FC<GameCardProps> = ({
           </button>
         </div>
         {(downloadStatus === 'downloading' && downloadProgress !== undefined) && (
-          <div className="card-inline-progress">
-            <div className="card-inline-progress-fill" style={{ width: `${downloadProgress}%` }} />
+          <div className={styles['card-inline-progress']}>
+            <div className={styles['card-inline-progress-fill']} style={{ width: `${downloadProgress}%` }} />
           </div>
         )}
       </div>
 
-      <div className="card-meta-top">
-        <div className="card-title">{game.game_name || game.release_name}</div>
+      <div className={styles['card-meta-top']}>
+        <div className={styles['card-title']}>{game.game_name || game.release_name}</div>
       </div>
 
-      <div className="card-meta">{(!game.size || game.size === "0" || game.size === "0 MB") ? "Size unknown" : game.size} | v{game.version_code || ""}</div>
+      <div className={styles['card-meta']}>{(!game.size || game.size === "0" || game.size === "0 MB") ? "Size unknown" : game.size} | v{game.version_code || ""}</div>
     </div>
   );
 };

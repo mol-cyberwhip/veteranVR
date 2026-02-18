@@ -1,0 +1,73 @@
+.backup-create-card {
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(51, 70, 102, 0.5);
+  background: linear-gradient(170deg, rgba(28, 39, 60, 0.8), rgba(20, 30, 47, 0.85));
+  margin-bottom: 16px;
+}
+.backup-card-title {
+  margin: 0 0 4px;
+  font-size: 0.88rem;
+  font-weight: 640;
+  color: var(--text-0);
+}
+.backup-card-subtitle {
+  margin: 0 0 10px;
+  font-size: 0.76rem;
+  color: var(--text-2);
+}
+.backup-create-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.backup-app-select {
+  flex: 1;
+  min-width: 200px;
+}
+.backup-list-section {
+  margin-top: 4px;
+}
+.backup-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.backup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.backup-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(51, 70, 102, 0.5);
+  background: linear-gradient(170deg, rgba(28, 39, 60, 0.8), rgba(20, 30, 47, 0.85));
+  transition: border-color 0.15s ease;
+}
+.backup-item:hover {
+  border-color: rgba(95, 138, 200, 0.7);
+}
+.backup-item-info {
+  flex: 1;
+  min-width: 0;
+}
+.backup-item-name {
+  font-size: 0.84rem;
+  font-weight: 640;
+  color: var(--text-0);
+}
+.backup-item-package {
+  font-size: 0.7rem;
+  color: var(--text-2);
+  font-family: ui-monospace, "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+}
+.backup-item-date {
+  font-size: 0.72rem;
+  color: var(--text-2);
+  white-space: nowrap;
+}

@@ -1,0 +1,16 @@
+.download-list-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.download-section {
+  /* container for a group of download items */
+}
+.download-section-header {
+  margin: 0 0 8px;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8aa4ce;
+  font-weight: 640;
+}

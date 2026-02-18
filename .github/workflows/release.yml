@@ -24,7 +24,58 @@ jobs:
           merge-multiple: false
 
       - name: Create GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: artifacts/**/*
+
+      - name: Update release body with install instructions
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          REPO="${{ github.repository }}"
+          BASE="https://github.com/${REPO}/releases/download/${TAG}"
+
+          # Find asset names
+          MAC_ARM=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[] | select(.name | endswith("aarch64.dmg")) | .name' | head -1)
+          MAC_X86=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[] | select(.name | endswith("x64.dmg")) | .name' | head -1)
+          LINUX_DEB=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[] | select(.name | endswith(".deb") and (.name | contains("amd64"))) | .name' | tail -1)
+          LINUX_APPIMAGE=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[] | select(.name | endswith(".AppImage")) | .name' | tail -1)
+          WIN_EXE=$(gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[] | select(.name | endswith("x64-setup.exe")) | .name' | tail -1)
+
+          # Get auto-generated release notes
+          EXISTING_NOTES=$(gh release view "$TAG" --repo "$REPO" --json body --jq '.body')
+
+          BODY="## Install
+
+          ### macOS
+          | Chip | Download |
+          |------|----------|
+          | Apple Silicon (M1/M2/M3) | [${MAC_ARM}](${BASE}/${MAC_ARM}) |
+          | Intel | [${MAC_X86}](${BASE}/${MAC_X86}) |
+
+          Open the \`.dmg\`, drag **Veteran Desktop** to Applications, then right-click → Open on first launch (macOS Gatekeeper).
+
+          ### Windows
+          | Download |
+          |----------|
+          | [${WIN_EXE}](${BASE}/${WIN_EXE}) |
+
+          Run the installer and follow the prompts.
+
+          ### Linux
+          | Format | Download |
+          |--------|----------|
+          | Debian/Ubuntu (.deb) | [${LINUX_DEB}](${BASE}/${LINUX_DEB}) |
+          | AppImage | [${LINUX_APPIMAGE}](${BASE}/${LINUX_APPIMAGE}) |
+
+          **Debian/Ubuntu:** \`sudo dpkg -i ${LINUX_DEB}\`
+          **AppImage:** \`chmod +x ${LINUX_APPIMAGE} && ./${LINUX_APPIMAGE}\`
+
+          ---
+
+          ${EXISTING_NOTES}"
+
+          gh release edit "$TAG" --repo "$REPO" --notes "$BODY"

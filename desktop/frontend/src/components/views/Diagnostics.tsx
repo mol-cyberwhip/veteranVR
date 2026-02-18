@@ -2,16 +2,17 @@ import { useRef, useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useInternalLogs, LogEntry } from '../../hooks/useInternalLogs';
 import { api } from '../../services/api';
+import styles from './Diagnostics.module.css';
 
 function LogLine({ entry }: { entry: LogEntry }) {
   const ts = new Date(entry.timestamp).toISOString().slice(11, 23);
-  const levelClass = `log-level-${entry.level}`;
+  const levelClass = styles[`log-level-${entry.level}`];
   return (
-    <div className={`log-line ${levelClass}`}>
-      <span className="log-ts">{ts}</span>
-      <span className="log-source">{entry.source}</span>
-      <span className="log-msg">{entry.message}</span>
-      {(entry.repeatCount || 0) > 1 && <span className="log-repeat">x{entry.repeatCount}</span>}
+    <div className={`${styles['log-line']}${levelClass ? ` ${levelClass}` : ''}`}>
+      <span className={styles['log-ts']}>{ts}</span>
+      <span className={styles['log-source']}>{entry.source}</span>
+      <span className={styles['log-msg']}>{entry.message}</span>
+      {(entry.repeatCount || 0) > 1 && <span className={styles['log-repeat']}>x{entry.repeatCount}</span>}
     </div>
   );
 }
@@ -68,51 +69,51 @@ export default function DiagnosticsView() {
         </div>
       </div>
 
-      <div className="diagnostics-grid">
-        <div className="diagnostics-card">
+      <div className={styles['diagnostics-grid']}>
+        <div className={styles['diagnostics-card']}>
           <span className="card-expanded-label">Device</span>
-          <span className={`diagnostics-value ${deviceConnected ? 'value-ok' : 'value-danger'}`}>
+          <span className={`${styles['diagnostics-value']} ${deviceConnected ? styles['value-ok'] : styles['value-danger']}`}>
             {deviceConnected ? 'Connected' : 'Disconnected'}
           </span>
-          <span className="diagnostics-detail">{deviceMsg}</span>
+          <span className={styles['diagnostics-detail']}>{deviceMsg}</span>
         </div>
 
-        <div className="diagnostics-card">
+        <div className={styles['diagnostics-card']}>
           <span className="card-expanded-label">Catalog</span>
-          <span className={`diagnostics-value ${catalogSynced ? 'value-ok' : 'value-warn'}`}>
+          <span className={`${styles['diagnostics-value']} ${catalogSynced ? styles['value-ok'] : styles['value-warn']}`}>
             {catalogSynced ? 'Synced' : 'Pending'}
           </span>
-          <span className="diagnostics-detail">{catalogMsg}</span>
+          <span className={styles['diagnostics-detail']}>{catalogMsg}</span>
         </div>
 
-        <div className="diagnostics-card">
+        <div className={styles['diagnostics-card']}>
           <span className="card-expanded-label">Download Queue</span>
-          <span className={`diagnostics-value ${activeDownload ? 'value-accent' : 'value-ok'}`}>
+          <span className={`${styles['diagnostics-value']} ${activeDownload ? styles['value-accent'] : styles['value-ok']}`}>
             {queueCount} queued
           </span>
-          <span className="diagnostics-detail">
+          <span className={styles['diagnostics-detail']}>
             {activeDownload ? `Downloading: ${activeDownload.game_name || activeDownload.package_name}` : 'Idle'}
           </span>
         </div>
       </div>
 
-      <div className="diagnostics-logs">
-        <div className="diagnostics-logs-header">
+      <div className={styles['diagnostics-logs']}>
+        <div className={styles['diagnostics-logs-header']}>
           <h3 className="diagnostics-section-title">Internal Logs</h3>
-          <div className="diagnostics-logs-controls">
-            <div className="log-level-filters">
+          <div className={styles['diagnostics-logs-controls']}>
+            <div className={styles['log-level-filters']}>
               {['all', 'error', 'warn', 'info'].map(level => (
                 <button
                   key={level}
                   type="button"
-                  className={`btn-sm log-filter-chip ${logFilter === level ? 'active' : ''}`}
+                  className={`btn-sm ${styles['log-filter-chip']}${logFilter === level ? ` ${styles['active']}` : ''}`}
                   onClick={() => setLogFilter(level)}
                 >
                   {level === 'all' ? 'All' : level.charAt(0).toUpperCase() + level.slice(1)}
                 </button>
               ))}
             </div>
-            <label className="diagnostics-autoscroll">
+            <label className={styles['diagnostics-autoscroll']}>
               <input type="checkbox" checked={autoScroll} onChange={(e) => setAutoScroll(e.target.checked)} />
               Auto-scroll
             </label>
@@ -124,9 +125,9 @@ export default function DiagnosticsView() {
             </button>
           </div>
         </div>
-        <div className="diagnostics-log-viewer">
+        <div className={styles['diagnostics-log-viewer']}>
           {entries.length === 0 && (
-            <div className="log-empty">No log entries yet</div>
+            <div className={styles['log-empty']}>No log entries yet</div>
           )}
           {entries.filter(e => logFilter === 'all' || e.level === logFilter).map((entry, i) => (
             <LogLine key={i} entry={entry} />
@@ -135,10 +136,10 @@ export default function DiagnosticsView() {
         </div>
       </div>
 
-      <div className="diagnostics-troubleshoot">
+      <div className={styles['diagnostics-troubleshoot']}>
         <h3 className="diagnostics-section-title">Troubleshooting</h3>
         <p className="diagnostics-section-hint">Use these if the app stops responding or behaves unexpectedly</p>
-        <div className="diagnostics-actions">
+        <div className={styles['diagnostics-actions']}>
           <button id="refresh-button" type="button" className="btn-secondary" onClick={handleRefreshBackend}>
             Refresh Backend State
           </button>
