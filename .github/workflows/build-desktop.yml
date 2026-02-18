@@ -93,7 +93,6 @@ jobs:
           name: veteran-desktop-${{ matrix.target }}
           path: |
             desktop/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-            desktop/target/${{ matrix.target }}/release/bundle/macos/*.app
           if-no-files-found: warn
 
       - name: Upload Linux artifacts
