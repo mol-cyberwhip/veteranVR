@@ -13,11 +13,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val container = AppContainer.from(this)
 
         setContent {
             VeteranQuestTheme {
-                val vm: QuestViewModel = viewModel(factory = QuestViewModel.Factory)
-                QuestAppScreen(viewModel = vm)
+                val vm: QuestViewModel = viewModel(
+                    factory = QuestViewModel.factory(container),
+                )
+                QuestAppScreen(
+                    viewModel = vm,
+                    permissionGateService = container.permissionGateService,
+                )
             }
         }
     }

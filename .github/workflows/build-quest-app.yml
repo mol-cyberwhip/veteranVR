@@ -36,6 +36,14 @@ jobs:
         run: ./gradlew :core-model:test :core-catalog:test :core-installer:test
         working-directory: veteran-quest-app
 
+      - name: Run app unit tests
+        run: ./gradlew :app:testDebugUnitTest
+        working-directory: veteran-quest-app
+
+      - name: Static checks (detekt)
+        run: ./gradlew detekt
+        working-directory: veteran-quest-app
+
       - name: Assemble debug APK
         run: ./gradlew :app:assembleDebug
         working-directory: veteran-quest-app

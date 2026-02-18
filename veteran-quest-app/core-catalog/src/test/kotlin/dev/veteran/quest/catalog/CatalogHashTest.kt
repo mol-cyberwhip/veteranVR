@@ -8,6 +8,6 @@ class CatalogHashTest {
     fun `hash matches expected md5 format`() {
         val hash = CatalogHash.gameNameToHash("17 Seconds v2+1.0 -VRP")
         assertThat(hash).hasLength(32)
-        assertThat(hash).matches("[a-f0-9]{32}".toRegex())
+        assertThat(hash).matches("[a-f0-9]{32}")
     }
 }
