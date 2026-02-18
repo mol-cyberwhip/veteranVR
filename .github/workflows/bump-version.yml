@@ -19,7 +19,7 @@ jobs:
       - name: Read current version
         id: version
         run: |
-          CURRENT=$(grep '"version"' desktop/src-tauri/tauri.conf.json | head -1 | sed 's/.*"\([0-9]*\.[0-9]*\.[0-9]*\)".*/\1/')
+          CURRENT=$(grep '"version"' veteran-desktop/src-tauri/tauri.conf.json | head -1 | sed 's/.*"\([0-9]*\.[0-9]*\.[0-9]*\)".*/\1/')
           echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
 
           # Bump patch version
@@ -53,19 +53,19 @@ jobs:
           NEW="${{ steps.version.outputs.new }}"
 
           # Update tauri.conf.json
-          sed -i "s/\"version\": \"$OLD\"/\"version\": \"$NEW\"/" desktop/src-tauri/tauri.conf.json
+          sed -i "s/\"version\": \"$OLD\"/\"version\": \"$NEW\"/" veteran-desktop/src-tauri/tauri.conf.json
 
           # Update Cargo.toml
-          sed -i "0,/^version = \"$OLD\"/s//version = \"$NEW\"/" desktop/src-tauri/Cargo.toml
+          sed -i "0,/^version = \"$OLD\"/s//version = \"$NEW\"/" veteran-desktop/src-tauri/Cargo.toml
 
           # Update frontend package.json
-          sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"$NEW\"/" desktop/frontend/package.json
+          sed -i "s/\"version\": \"[0-9]*\.[0-9]*\.[0-9]*\"/\"version\": \"$NEW\"/" veteran-desktop/frontend/package.json
 
       - name: Commit version bump
         if: steps.check.outputs.exists == 'false'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add desktop/src-tauri/tauri.conf.json desktop/src-tauri/Cargo.toml desktop/frontend/package.json
+          git add veteran-desktop/src-tauri/tauri.conf.json veteran-desktop/src-tauri/Cargo.toml veteran-desktop/frontend/package.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.new }} [skip ci]" || echo "No changes to commit"
           git push

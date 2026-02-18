@@ -59,7 +59,7 @@ Monitor device connection status, catalog sync state, and download queue health 
 ## Quick Start
 
 ```bash
-cd desktop
+cd veteran-desktop
 
 # Install frontend dependencies
 cd frontend && npm install && cd ..
@@ -93,4 +93,4 @@ cargo tauri build
 
 ## Development
 
-See [`desktop/README.md`](desktop/README.md) for the full development guide, including TypeScript binding regeneration, project structure, and contributing guidelines.
+See [`veteran-desktop/README.md`](veteran-desktop/README.md) for the full development guide, including TypeScript binding regeneration, project structure, and contributing guidelines.

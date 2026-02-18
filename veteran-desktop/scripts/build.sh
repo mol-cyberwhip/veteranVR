@@ -23,7 +23,7 @@ cd "$SCRIPT_DIR/.."
 # Check if we're in the right directory
 if [ ! -f "src-tauri/Cargo.toml" ]; then
     echo -e "${RED}Error: src-tauri/Cargo.toml not found${NC}"
-    echo "Please run this script from the desktop directory"
+    echo "Please run this script from the veteran-desktop directory"
     exit 1
 fi
 
