@@ -1,52 +1,61 @@
 # Veteran Quest App
 
-Android APK for Quest 2/3 to browse catalog and install/uninstall content directly from headset.
+Veteran Quest is a native Android APK for Quest 2/3 that mirrors Veteran Desktop's core sideload flow directly on headset.
 
-## Current Status
+## v1 User Story
 
-This initial scaffold sets up:
-- Kotlin + Jetpack Compose app shell
-- Pure Kotlin core modules with unit tests (`core-model`, `core-catalog`, `core-installer`)
-- Search/sort/filter UX and uninstall toggles in app UI
-- CI workflow for unit tests + debug APK artifact
+`Catalog -> Browse -> Install + Uninstall`
 
-The real downloader/extractor/installer backend is intentionally the next step.
+v1 includes:
+- Real catalog sync from `vrp-public.json` + `meta.7z`
+- 4-hour cache policy parity with desktop behavior
+- Thumbnail-backed browse, search, sort, and default non-mod filter
+- Single-worker download queue with pause/resume while app is alive
+- Passworded 7z extraction with bundled `7zz` asset
+- Install pipeline: APK + OBB + `install.txt` allowlist mode (warn/skip unsupported commands)
+- Uninstall with `Keep OBB` and `Keep Data` toggles
+- In-app operation diagnostics log panel
 
-## Stack
+Out of scope for v1:
+- Update action UX
+- Resume after process death/reboot
+- Full desktop-grade diagnostics suite
 
-- Kotlin + Gradle Kotlin DSL
-- Jetpack Compose (panel-mode UI)
-- Core logic as pure Kotlin modules for JVM unit tests
-- `minSdk=29`, `targetSdk=29` for Quest-oriented storage/install behavior
+## Project Layout
 
-## Modules
+- `core-model`: shared domain models
+- `core-catalog`: catalog/config parsing + hash/chunk planning
+- `core-installer`: install.txt parsing/planning
+- `app`: Android platform services + Compose UI
 
-- `core-model`: shared models and query definitions
-- `core-catalog`: config decoding, catalog parsing, hash + search/sort/filter logic
-- `core-installer`: `install.txt` parser and install plan generation
-- `app`: Android UI + repository wiring
-
-## Build
+## Build and Checks
 
 ```bash
 cd veteran-quest-app
 ./gradlew :core-model:test :core-catalog:test :core-installer:test
+./gradlew :app:testDebugUnitTest
+./gradlew detekt
 ./gradlew :app:assembleDebug
 ```
 
-## Why Release Signing Is Extra Work
+## Runtime Notes
 
-Release signing itself is not conceptually hard, but production-ready signing needs:
-- Keystore generation and secure storage strategy
-- CI secret handling for keystore + passwords
-- Signed release workflow/versioning policy
-- Install/update key continuity guarantees
+- App expects `app/src/main/assets/7zz` to be executable on Quest arm64.
+- Catalog/download requests use `User-Agent: rclone/v1.73.0` to match remote compatibility expectations.
+- Install actions are gated by:
+  - Unknown app install permission
+  - All files access
+  - Minimum free storage threshold
 
-That is why the first CI output is debug APK, then release signing can be added once key-management policy is decided.
+## Manual Runbook (Quest 2 + Quest 3)
 
-## Next Implementation Slice
-
-1. Real remote sync pipeline (config fetch, `meta.7z` download, passworded extract, thumbnail/note cache)
-2. Background download queue with pause/resume in-process
-3. Android `PackageInstaller` flow + OBB copy + uninstall toggles
-4. Minimal diagnostics/log panel
+1. Fresh install app, grant setup permissions from gate.
+2. Sync catalog, verify thumbnails load.
+3. Verify search/sort/non-mod filter behavior.
+4. Install APK-only title.
+5. Install APK+OBB title.
+6. Install title with `install.txt` containing supported and unsupported commands.
+7. Pause/resume download while app is backgrounded but alive.
+8. Uninstall with both toggle combinations.
+9. Verify downloaded artifacts are cleaned after successful install.
+10. Verify cache skip (<4h) and force sync behavior.

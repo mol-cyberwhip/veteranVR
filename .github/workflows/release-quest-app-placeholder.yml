@@ -1,0 +1,14 @@
+name: Release Quest App (Placeholder)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  placeholder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Release signing TODO
+        run: |
+          echo "TODO: Implement signed release pipeline for veteran-quest-app"
+          echo "Required secrets: QUEST_KEYSTORE_B64, QUEST_KEYSTORE_PASSWORD, QUEST_KEY_ALIAS, QUEST_KEY_PASSWORD"
+          echo "Required tasks: decode keystore, configure signingConfig, run :app:assembleRelease, upload release artifact"

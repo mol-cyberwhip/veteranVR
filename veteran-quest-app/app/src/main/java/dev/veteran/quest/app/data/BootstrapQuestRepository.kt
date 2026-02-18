@@ -3,11 +3,18 @@ package dev.veteran.quest.app.data
 import dev.veteran.quest.catalog.CatalogParser
 import dev.veteran.quest.catalog.CatalogQueryEngine
 import dev.veteran.quest.catalog.RemoteCatalogPlanner
+import dev.veteran.quest.app.model.CatalogSyncSummary
+import dev.veteran.quest.app.model.DownloadOperation
+import dev.veteran.quest.app.model.LibraryItemUi
+import dev.veteran.quest.app.model.OperationLogEntry
+import dev.veteran.quest.app.model.PermissionGateStatus
 import dev.veteran.quest.installer.UninstallOptions
 import dev.veteran.quest.model.Game
 import dev.veteran.quest.model.LibraryQuery
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -23,10 +30,12 @@ Puzzling Places;Puzzling Places v150+2.6.0;com.realitiesio.puzzlingplaces;150;20
 class BootstrapQuestRepository(
     private val remote: QuestRemoteDataSource = QuestRemoteDataSource(),
 ) : QuestRepository {
+    override val operations: StateFlow<List<DownloadOperation>> = MutableStateFlow(emptyList())
+    override val logs: StateFlow<List<OperationLogEntry>> = MutableStateFlow(emptyList())
     private val lock = Mutex()
     private var dataset = CatalogParser.parseGameList(BOOTSTRAP_CATALOG.trimIndent())
 
-    override suspend fun syncCatalog(force: Boolean): Result<Int> {
+    override suspend fun syncCatalog(force: Boolean): Result<CatalogSyncSummary> {
         delay(150)
         return withContext(Dispatchers.IO) {
             runCatching {
@@ -42,20 +51,41 @@ class BootstrapQuestRepository(
                         // TODO: force will trigger full cache bust once local cache is implemented.
                     }
                     dataset = CatalogParser.parseGameList(BOOTSTRAP_CATALOG.trimIndent())
-                    dataset.latestGames.size
+                    CatalogSyncSummary(
+                        lastSyncEpochMs = System.currentTimeMillis(),
+                        gamesCount = dataset.latestGames.size,
+                        usedCache = false,
+                    )
                 }
             }
         }
     }
 
-    override suspend fun getLibrary(query: LibraryQuery): List<Game> {
+    override suspend fun getLibrary(query: LibraryQuery): List<LibraryItemUi> {
         return lock.withLock {
-            CatalogQueryEngine.query(dataset.latestGames, dataset.allVersions, query)
+            CatalogQueryEngine.query(dataset.latestGames, dataset.allVersions, query).map { game ->
+                LibraryItemUi(
+                    game = game,
+                    thumbnailPath = "",
+                    thumbnailExists = false,
+                    notePath = "",
+                    noteExists = false,
+                    isInstalled = false,
+                )
+            }
         }
     }
 
-    override suspend fun install(game: Game): Result<Unit> {
+    override suspend fun enqueueInstall(game: Game): Result<String> {
         delay(120)
+        return Result.success("bootstrap-op")
+    }
+
+    override suspend fun pauseDownload(operationId: String): Result<Unit> {
+        return Result.success(Unit)
+    }
+
+    override suspend fun resumeDownload(operationId: String): Result<Unit> {
         return Result.success(Unit)
     }
 
@@ -65,5 +95,14 @@ class BootstrapQuestRepository(
             // Kept for API parity with the real uninstall implementation.
         }
         return Result.success(Unit)
+    }
+
+    override suspend fun permissionStatus(): PermissionGateStatus {
+        return PermissionGateStatus(
+            canInstallPackages = false,
+            hasAllFilesAccess = false,
+            freeBytes = 0,
+            minRequiredBytes = 1,
+        )
     }
 }
