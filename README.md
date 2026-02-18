@@ -4,6 +4,10 @@ A cross-platform VR sideloading application for managing, downloading, and insta
 
 ![Demo](example_images/demo.gif)
 
+> **⚠️ IMPORTANT: You MUST enable Developer Mode on your Quest headset before using this app!**
+>
+> **[👉 Click here for instructions on enabling Developer Mode](https://vrpirates.wiki/en/Howto/enabling-dev-mode)**
+
 ![Library View](example_images/library.png)
 
 ## Features
