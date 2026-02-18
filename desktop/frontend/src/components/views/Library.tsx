@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { Game } from '../../types';
 import { GameCard } from '../Library/GameCard';
 import { GameDetailModal } from '../Library/GameDetailModal';
+import styles from './Library.module.css';
 
 export default function LibraryView() {
   const { catalogStatus, downloadQueue, installedApps, installingPackages, startInstall } = useApp();
@@ -12,17 +13,14 @@ export default function LibraryView() {
   const [error, setError] = useState<string | null>(null);
   const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
-  // Filter state
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
   const [sortAsc, setSortAsc] = useState(true);
   const [filter, setFilter] = useState('all');
 
-  // Map installed packages for quick lookup
   const installedMap = new Map();
   installedApps.forEach(app => installedMap.set(app.package_name, app.version_code));
 
-  // Map download queue
   const queueItems = downloadQueue?.queue || [];
   const activeDownload = downloadQueue?.active_download;
   
@@ -50,7 +48,6 @@ export default function LibraryView() {
     }
   };
 
-  // Debounce search
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchLibrary();
@@ -102,7 +99,7 @@ export default function LibraryView() {
         <button 
             id="catalog-sync-button" 
             type="button" 
-            className="library-sync-button"
+            className={styles['library-sync-button']}
             onClick={() => api.syncCatalog()}
             disabled={catalogStatus?.sync_in_progress}
         >
@@ -110,7 +107,7 @@ export default function LibraryView() {
         </button>
       </div>
 
-      <div className="library-toolbar">
+      <div className={styles['library-toolbar']}>
             <input
               id="library-search-input"
               type="text"
@@ -141,11 +138,11 @@ export default function LibraryView() {
             </button>
       </div>
 
-      <div className="library-filters">
+      <div className={styles['library-filters']}>
         {['all', 'favorites', 'new', 'popular'].map(f => (
             <button 
                 key={f}
-                className={`filter-chip ${filter === f ? 'active' : ''}`} 
+                className={`${styles['filter-chip']}${filter === f ? ` ${styles['active']}` : ''}`} 
                 onClick={() => setFilter(f)}
                 data-filter={f}
             >
@@ -154,7 +151,7 @@ export default function LibraryView() {
         ))}
       </div>
 
-      <div id="library-game-container" className="library-grid-view">
+      <div id="library-game-container" className={styles['library-grid-view']}>
         {loading && <p style={{color:'#999',textAlign:'center',padding:'24px'}}>Loading...</p>}
         {error && <p style={{color:'#f88',textAlign:'center',padding:'24px'}}>{error}</p>}
         {!loading && !error && games.length === 0 && (

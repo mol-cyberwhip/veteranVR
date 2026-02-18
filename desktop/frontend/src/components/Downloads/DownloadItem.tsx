@@ -1,5 +1,6 @@
 import React from 'react';
 import { DownloadQueueItem, Game } from '../../types';
+import styles from './DownloadItem.module.css';
 
 interface DownloadItemProps {
   item: DownloadQueueItem;
@@ -18,15 +19,15 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
   const isDownloading = item.status === 'downloading';
   const isPaused = item.status === 'paused';
 
-  const statusClass = isCompleted ? 'status-completed' : isFailed ? 'status-failed' : isDownloading ? 'status-downloading' : isPaused ? 'status-paused' : '';
+  const statusClass = isCompleted ? styles['status-completed'] : isFailed ? styles['status-failed'] : isDownloading ? styles['status-downloading'] : isPaused ? styles['status-paused'] : '';
 
   return (
-    <div className={`download-item ${statusClass}`}>
-      <div className="download-item-header">
-        <span className="download-item-name">{name}</span>
-        <span className="download-item-status">
+    <div className={`${styles['download-item']}${statusClass ? ` ${statusClass}` : ''}`}>
+      <div className={styles['download-item-header']}>
+        <span className={styles['download-item-name']}>{name}</span>
+        <span className={styles['download-item-status']}>
             {isCompleted ? (
-              <span className="download-completed-badge">Ready to install</span>
+              <span className={styles['download-completed-badge']}>Ready to install</span>
             ) : (
               <>{item.status} {item.speed ? `(${item.speed})` : ''}</>
             )}
@@ -34,23 +35,23 @@ export const DownloadItem: React.FC<DownloadItemProps> = ({ item, game, onCancel
       </div>
 
       {!isCompleted && (
-        <div className="download-item-progress-bar">
+        <div className={styles['download-item-progress-bar']}>
           <div
-            className="download-item-progress-fill"
+            className={styles['download-item-progress-fill']}
             style={{ width: `${item.progress_percent}%` }}
           />
         </div>
       )}
 
-      <div className="download-item-info">
-        <span className="download-item-percent">
+      <div className={styles['download-item-info']}>
+        <span className={styles['download-item-percent']}>
           {isCompleted ? (
-            <span className="download-completed-size">{game?.size || 'Download complete'}</span>
+            <span className={styles['download-completed-size']}>{game?.size || 'Download complete'}</span>
           ) : (
             <>{item.progress_percent.toFixed(1)}%{item.eta ? ` - ETA: ${item.eta}` : ''}{isDownloading && item.speed ? ` - ${item.speed}` : ''}</>
           )}
         </span>
-        <div className="download-item-actions">
+        <div className={styles['download-item-actions']}>
             {isDownloading && (
                 <button
                     onClick={() => onPause(item.package_name)}

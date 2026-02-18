@@ -6,6 +6,7 @@ import BackupsView from './components/views/Backups';
 import DiagnosticsView from './components/views/Diagnostics';
 import WirelessView from './components/views/Wireless';
 import { useApp } from './context/AppContext';
+import styles from './App.module.css';
 
 const NAV_ITEMS = [
   { id: 'library-view',     label: 'Library',     icon: '\uD83C\uDFAE' },
@@ -34,7 +35,7 @@ function App() {
 
   const deviceConnected = deviceStatus?.status === 'connected' || deviceStatus?.status === 'multiple_connected';
   const deviceMsg = deviceStatus?.status_message || "No device connected";
-  const deviceClass = deviceConnected ? "sidebar-device-status connected" : "sidebar-device-status disconnected";
+  const deviceClass = deviceConnected ? `${styles['sidebar-device-status']} ${styles['connected']}` : `${styles['sidebar-device-status']} ${styles['disconnected']}`;
 
   const queueCount = downloadQueue?.queue?.length || 0;
   const activeDownload = downloadQueue?.active_download;
@@ -46,38 +47,38 @@ function App() {
   };
 
   return (
-    <div className="app-shell">
-      <header className="titlebar">
-        <div className="titlebar-brand">
-          <div className="brand-mark"><img src="./assets/app-logo.svg" alt="Veteran logo" /></div>
-          <div className="titlebar-copy">
+    <div className={styles['app-shell']}>
+      <header className={styles['titlebar']}>
+        <div className={styles['titlebar-brand']}>
+          <div className={styles['brand-mark']}><img src="./assets/app-logo.svg" alt="Veteran logo" /></div>
+          <div className={styles['titlebar-copy']}>
             <h1>Veteran Desktop</h1>
           </div>
         </div>
       </header>
 
-      <aside className="sidebar">
-        <nav className="sidebar-nav">
+      <aside className={styles['sidebar']}>
+        <nav className={styles['sidebar-nav']}>
           {NAV_ITEMS.map(({ id, label, icon }) => {
             const badge = getBadge(id);
             return (
               <button
                 key={id}
-                className={`sidebar-nav-item ${activeTab === id ? 'nav-active' : ''}`}
+                className={`${styles['sidebar-nav-item']}${activeTab === id ? ` ${styles['nav-active']}` : ''}`}
                 type="button"
                 onClick={() => setActiveTab(id)}
               >
-                <span className="sidebar-nav-icon">{icon}</span>
-                <span className="sidebar-nav-label">{label}</span>
-                {badge != null && <span className="sidebar-badge">{badge}</span>}
+                <span className={styles['sidebar-nav-icon']}>{icon}</span>
+                <span className={styles['sidebar-nav-label']}>{label}</span>
+                {badge != null && <span className={styles['sidebar-badge']}>{badge}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className="sidebar-device-info">
-          <span className="sidebar-label">Device</span>
-          <select id="sidebar-device-select" className="device-select-dropdown">
+        <div className={styles['sidebar-device-info']}>
+          <span className={styles['sidebar-label']}>Device</span>
+          <select id="sidebar-device-select" className={styles['device-select-dropdown']}>
             <option value="">Auto-select device</option>
             {deviceStatus?.devices?.map((d: any) => (
                 <option key={d.serial} value={d.serial}>{d.serial} ({d.state})</option>
@@ -87,48 +88,48 @@ function App() {
           <button
             id="sidebar-refresh-device-button"
             type="button"
-            className="sidebar-refresh-btn btn-primary"
+            className={`${styles['sidebar-refresh-btn']} btn-primary`}
             onClick={refreshDevice}
           >Refresh Device</button>
         </div>
 
       </aside>
 
-      <main className="workspace">
-        <div id="frontend-error-banner" className="frontend-error-banner hidden"></div>
+      <main className={styles['workspace']}>
+        <div id="frontend-error-banner" className={`${styles['frontend-error-banner']} ${styles['hidden']}`}></div>
         {renderView()}
       </main>
 
-      <footer className="statusbar" id="statusbar">
-        <div className="statusbar-left">
-          <span className={`statusbar-dot ${deviceConnected ? 'connected' : ''}`} id="statusbar-device-dot"></span>
+      <footer className={styles['statusbar']} id="statusbar">
+        <div className={styles['statusbar-left']}>
+          <span className={`${styles['statusbar-dot']}${deviceConnected ? ` ${styles['connected']}` : ''}`} id="statusbar-device-dot"></span>
           <span id="statusbar-device-text">
             {deviceConnected ? (deviceStatus?.status_message || "Device Connected") : "No device"}
           </span>
         </div>
 
         {activeDownload && (
-          <div className="statusbar-center">
-            <span className="statusbar-download-label">
+          <div className={styles['statusbar-center']}>
+            <span className={styles['statusbar-download-label']}>
               {activeDownload.game_name || activeDownload.package_name}
             </span>
-            <div className="statusbar-download-progress">
+            <div className={styles['statusbar-download-progress']}>
               <div
-                className="statusbar-download-progress-fill"
+                className={styles['statusbar-download-progress-fill']}
                 style={{ width: `${activeDownload.progress_percent || 0}%` }}
               />
             </div>
-            <span className="statusbar-download-pct">
+            <span className={styles['statusbar-download-pct']}>
               {(activeDownload.progress_percent || 0).toFixed(0)}%
               {activeDownload.speed ? ` (${activeDownload.speed})` : ''}
             </span>
           </div>
         )}
 
-        <div className="statusbar-right">
+        <div className={styles['statusbar-right']}>
           <button
             type="button"
-            className="statusbar-queue-btn"
+            className={styles['statusbar-queue-btn']}
             onClick={() => setActiveTab('download-view')}
           >
             Queue: {queueCount}
