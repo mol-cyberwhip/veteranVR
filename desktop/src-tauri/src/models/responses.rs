@@ -487,6 +487,19 @@ pub struct WirelessReconnectResult {
     pub message: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+pub struct WirelessEnableTcpipResult {
+    pub success: bool,
+    pub ip_address: Option<String>,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, specta::Type)]
+pub struct WirelessScanResult {
+    pub devices: Vec<String>,
+    pub message: String,
+}
+
 // ============================================================================
 // Log Responses
 // ============================================================================
