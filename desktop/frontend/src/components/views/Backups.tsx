@@ -107,6 +107,7 @@ export default function BackupsView() {
                     {new Date(b.timestamp * 1000).toLocaleString()}
                   </div>
                   <button
+                    type="button"
                     className="btn-sm btn-secondary"
                     onClick={() => handleRestore(pkg)}
                     disabled={loading}
