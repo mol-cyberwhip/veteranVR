@@ -9,6 +9,7 @@ use std::net::{Ipv4Addr, SocketAddrV4};
 use std::path::Path;
 use std::process::Command;
 use std::sync::LazyLock;
+use std::time::Duration;
 
 static SIZE_TOKEN_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"^([0-9]+(?:\.[0-9]+)?)([kmgtp]?i?b?)?$").expect("invalid size token regex")
@@ -146,6 +147,52 @@ impl AdbService {
         })
         .await
         .context("failed to join connect_wireless task")?
+    }
+
+    pub async fn enable_tcpip(&self, port: u16) -> Result<AdbResult> {
+        let serial = self.device_serial.clone();
+        tokio::task::spawn_blocking(move || {
+            let mut cmd = Command::new(crate::services::binary_paths::adb());
+            if let Some(s) = &serial {
+                cmd.arg("-s").arg(s);
+            }
+            cmd.arg("tcpip").arg(port.to_string());
+            let output = cmd.output().context("failed to execute `adb tcpip`")?;
+            Ok(AdbResult {
+                stdout: String::from_utf8_lossy(&output.stdout).to_string(),
+                stderr: String::from_utf8_lossy(&output.stderr).to_string(),
+                returncode: output.status.code().unwrap_or(1),
+            })
+        })
+        .await
+        .context("failed to join enable_tcpip task")?
+    }
+
+    pub async fn scan_for_devices(&self, subnet: &str) -> Result<Vec<String>> {
+        let subnet = subnet.to_string();
+        let mut handles = Vec::new();
+        for i in 1u8..=254 {
+            let addr = format!("{}{}:5555", subnet, i);
+            let handle = tokio::spawn(async move {
+                let connect_result = tokio::time::timeout(
+                    Duration::from_secs(1),
+                    tokio::net::TcpStream::connect(&addr),
+                )
+                .await;
+                match connect_result {
+                    Ok(Ok(_)) => Some(addr),
+                    _ => None,
+                }
+            });
+            handles.push(handle);
+        }
+        let mut found = Vec::new();
+        for handle in handles {
+            if let Ok(Some(addr)) = handle.await {
+                found.push(addr);
+            }
+        }
+        Ok(found)
     }
 
     pub async fn disconnect_wireless(&self, ip_port: Option<&str>) -> Result<AdbResult> {

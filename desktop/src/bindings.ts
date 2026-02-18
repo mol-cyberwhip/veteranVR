@@ -365,6 +365,22 @@ async backendWirelessReconnect() : Promise<Result<WirelessReconnectResult, strin
     else return { status: "error", error: e  as any };
 }
 },
+async backendWirelessEnableTcpip(port: number | null) : Promise<Result<WirelessEnableTcpipResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backend_wireless_enable_tcpip", { port }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async backendWirelessScan(subnet: string | null) : Promise<Result<WirelessScanResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("backend_wireless_scan", { subnet }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async pollBackendEvents(operationId: string | null, limit: number | null) : Promise<Result<JsonValue, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("poll_backend_events", { operationId, limit }) };
@@ -766,7 +782,9 @@ export type WindowStateResult = { state: WindowState }
 export type WindowStateSetResult = { saved: boolean }
 export type WirelessConnectResult = { connected: boolean; endpoint: string; message: string }
 export type WirelessDisconnectResult = { disconnected: boolean; message: string }
+export type WirelessEnableTcpipResult = { success: boolean; ip_address: string | null; message: string }
 export type WirelessReconnectResult = { reconnected: boolean; endpoint: string | null; message: string }
+export type WirelessScanResult = { devices: string[]; message: string }
 
 /** tauri-specta globals **/
 

@@ -4,6 +4,7 @@ import DownloadsView from './components/views/Downloads';
 import InstalledView from './components/views/Installed';
 import BackupsView from './components/views/Backups';
 import DiagnosticsView from './components/views/Diagnostics';
+import WirelessView from './components/views/Wireless';
 import { useApp } from './context/AppContext';
 
 const NAV_ITEMS = [
@@ -11,6 +12,7 @@ const NAV_ITEMS = [
   { id: 'download-view',    label: 'Downloads',   icon: '\u2B07' },
   { id: 'installed-view',   label: 'Installed',   icon: '\uD83D\uDCE6' },
   { id: 'backup-view',      label: 'Backups',     icon: '\uD83D\uDCBE' },
+  { id: 'wireless-view',    label: 'Wireless',    icon: '\uD83D\uDCF6' },
   { id: 'diagnostics-view', label: 'Diagnostics', icon: '\u2699' },
 ] as const;
 
@@ -24,6 +26,7 @@ function App() {
       case 'download-view': return <DownloadsView />;
       case 'installed-view': return <InstalledView />;
       case 'backup-view': return <BackupsView />;
+      case 'wireless-view': return <WirelessView />;
       case 'diagnostics-view': return <DiagnosticsView />;
       default: return <LibraryView />;
     }
@@ -89,22 +92,6 @@ function App() {
           >Refresh Device</button>
         </div>
 
-        <details className="sidebar-group sidebar-wireless-group">
-          <summary className="sidebar-wireless-summary">
-            <span className="sidebar-label">Wireless ADB</span>
-            <span className="sidebar-wireless-chevron">&#9654;</span>
-          </summary>
-          <input id="sidebar-wireless-endpoint" type="text" placeholder="192.168.1.20:5555" className="sidebar-wireless-input" />
-          <div className="sidebar-wireless-actions">
-            <button id="sidebar-wireless-connect-button" type="button" className="sidebar-wireless-btn">Connect</button>
-            <button id="sidebar-wireless-disconnect-button" type="button" className="sidebar-wireless-btn">Disconnect</button>
-            <button id="sidebar-wireless-reconnect-button" type="button" className="sidebar-wireless-btn sidebar-wireless-btn-full">Reconnect</button>
-          </div>
-          <label className="sidebar-wireless-auto">
-            <input id="sidebar-wireless-auto-reconnect" type="checkbox" />
-            Auto-reconnect
-          </label>
-        </details>
       </aside>
 
       <main className="workspace">

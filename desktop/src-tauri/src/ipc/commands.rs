@@ -1684,13 +1684,16 @@ pub async fn backend_device_state(state: State<'_, AppState>) -> Result<DeviceSt
         devices: devices_payload,
         storage,
         battery,
-        wireless: DeviceWirelessState {
-            saved_endpoint: None,
-            auto_reconnect_enabled: false,
-            last_attempt_at: None,
-            last_endpoint: None,
-            last_status: None,
-            last_error: None,
+        wireless: {
+            let settings = state.settings.get_settings().await;
+            DeviceWirelessState {
+                saved_endpoint: if settings.ip_address.is_empty() { None } else { Some(settings.ip_address.clone()) },
+                auto_reconnect_enabled: settings.wireless_adb,
+                last_attempt_at: None,
+                last_endpoint: None,
+                last_status: None,
+                last_error: None,
+            }
         },
         keep_awake: DeviceKeepAwake {
             enabled: false,
@@ -1740,6 +1743,15 @@ pub async fn backend_wireless_connect(
         let _ = state.settings.patch_settings(patch).await;
     }
 
+    if result.success() {
+        let adb = state.adb.clone();
+        let ep = endpoint.clone();
+        tokio::spawn(async move {
+            let _ = adb.shell("settings put global wifi_wakeup_available 1", Some(&ep)).await;
+            let _ = adb.shell("settings put global wifi_wakeup_enabled 1", Some(&ep)).await;
+        });
+    }
+
     Ok(WirelessConnectResult {
         connected: result.success(),
         endpoint,
@@ -1787,6 +1799,106 @@ pub async fn backend_wireless_reconnect(state: State<'_, AppState>) -> Result<Wi
             message: "No saved IP address".to_string(),
         })
     }
+}
+
+#[tauri::command]
+#[specta]
+pub async fn backend_wireless_enable_tcpip(
+    state: State<'_, AppState>,
+    port: Option<u16>,
+) -> Result<WirelessEnableTcpipResult, String> {
+    let port = port.unwrap_or(5555);
+    let tcpip_result = state
+        .adb
+        .enable_tcpip(port)
+        .await
+        .map_err(|err| err.to_string())?;
+
+    if !tcpip_result.success() {
+        return Ok(WirelessEnableTcpipResult {
+            success: false,
+            ip_address: None,
+            message: format!("tcpip failed: {}", tcpip_result.stderr.trim()),
+        });
+    }
+
+    // Give device a moment to switch to TCP mode
+    tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+
+    // Retrieve device IP via wlan0
+    let ip_result = state
+        .adb
+        .shell("ip -f inet addr show wlan0", None)
+        .await
+        .ok();
+    let ip_address = ip_result.and_then(|r| {
+        r.stdout
+            .lines()
+            .find(|l| l.trim().starts_with("inet "))
+            .and_then(|l| l.trim().strip_prefix("inet "))
+            .and_then(|l| l.split('/').next())
+            .map(|ip| format!("{}:{}", ip.trim(), port))
+    });
+
+    Ok(WirelessEnableTcpipResult {
+        success: true,
+        ip_address,
+        message: tcpip_result.output(),
+    })
+}
+
+#[tauri::command]
+#[specta]
+pub async fn backend_wireless_scan(
+    state: State<'_, AppState>,
+    subnet: Option<String>,
+) -> Result<WirelessScanResult, String> {
+    let subnet = match subnet {
+        Some(s) => s,
+        None => {
+            // Auto-detect subnet from host network interfaces
+            let output = std::process::Command::new("route")
+                .args(["-n", "get", "default"])
+                .output()
+                .ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok());
+            // Fallback: try to get a local non-loopback IP
+            let local_ip = if let Some(out) = output {
+                out.lines()
+                    .find(|l| l.contains("interface:"))
+                    .and_then(|l| l.split_whitespace().last())
+                    .map(|iface| {
+                        std::process::Command::new("ipconfig")
+                            .arg("getifaddr")
+                            .arg(iface)
+                            .output()
+                            .ok()
+                            .and_then(|o| String::from_utf8(o.stdout).ok())
+                            .map(|s| s.trim().to_string())
+                    })
+                    .flatten()
+            } else {
+                None
+            };
+            let ip = local_ip.unwrap_or_else(|| "192.168.1.1".to_string());
+            // Convert "192.168.1.100" -> "192.168.1."
+            ip.rsplitn(2, '.').last().map(|prefix| format!("{}.", prefix)).unwrap_or_else(|| "192.168.1.".to_string())
+        }
+    };
+
+    let devices = state
+        .adb
+        .scan_for_devices(&subnet)
+        .await
+        .map_err(|err| err.to_string())?;
+
+    let message = if devices.is_empty() {
+        format!("No ADB devices found on {}", subnet)
+    } else {
+        format!("Found {} device(s)", devices.len())
+    };
+
+    Ok(WirelessScanResult { devices, message })
 }
 
 // --- Events ---
@@ -2347,6 +2459,8 @@ pub fn register_invoke_handler(builder: tauri::Builder<Wry>) -> tauri::Builder<W
         backend_wireless_connect,
         backend_wireless_disconnect,
         backend_wireless_reconnect,
+        backend_wireless_enable_tcpip,
+        backend_wireless_scan,
         poll_backend_events,
         frontend_log,
         backend_log_entries,
@@ -2448,6 +2562,8 @@ mod tests {
             .typ::<WirelessConnectResult>()
             .typ::<WirelessDisconnectResult>()
             .typ::<WirelessReconnectResult>()
+            .typ::<WirelessEnableTcpipResult>()
+            .typ::<WirelessScanResult>()
             .typ::<LogEntry>()
             .typ::<LogEntriesResult>()
             .typ::<LogExportResult>()
@@ -2536,6 +2652,8 @@ mod tests {
                 backend_wireless_connect,
                 backend_wireless_disconnect,
                 backend_wireless_reconnect,
+                backend_wireless_enable_tcpip,
+                backend_wireless_scan,
                 poll_backend_events,
                 frontend_log,
                 backend_log_entries,
@@ -2576,7 +2694,7 @@ mod tests {
             .export(
                 specta_typescript::Typescript::default(),
                 std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-                    .join("../src/bindings.ts"),
+                    .join("../frontend/src/bindings.ts"),
             )
             .expect("Failed to export bindings");
     }
