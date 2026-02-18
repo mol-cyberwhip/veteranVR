@@ -166,5 +166,35 @@ export const api = {
 
   pollEvents: async (limit = 100) => {
     return invoke("poll_backend_events", { operationId: null, limit });
-  }
+  },
+
+  wirelessEnableTcpip: async () => {
+    const result = await commands.backendWirelessEnableTcpip(null);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
+
+  wirelessConnect: async (endpoint: string, saveEndpoint = true) => {
+    const result = await commands.backendWirelessConnect(endpoint, saveEndpoint);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
+
+  wirelessDisconnect: async (endpoint?: string) => {
+    const result = await commands.backendWirelessDisconnect(endpoint ?? null);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
+
+  wirelessReconnect: async () => {
+    const result = await commands.backendWirelessReconnect();
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
+
+  wirelessScan: async (subnet?: string) => {
+    const result = await commands.backendWirelessScan(subnet ?? null);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
 };

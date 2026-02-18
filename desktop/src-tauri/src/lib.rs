@@ -18,6 +18,13 @@ pub fn run() {
                 // Trigger catalog sync on startup
                 let _ = crate::ipc::commands::backend_catalog_sync(state, Some(false)).await;
             });
+
+            let handle2 = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let state = handle2.state::<AppState>();
+                // Auto-reconnect to saved wireless endpoint if configured
+                let _ = crate::ipc::commands::backend_wireless_reconnect(state).await;
+            });
             Ok(())
         })
         .on_window_event(|app, event| {
