@@ -1,0 +1,92 @@
+.download-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(51, 70, 102, 0.5);
+  background: linear-gradient(170deg, rgba(28, 39, 60, 0.8), rgba(20, 30, 47, 0.85));
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 4px;
+  transition: border-color 0.15s ease;
+}
+.download-item:hover {
+  border-color: rgba(95, 138, 200, 0.7);
+}
+.download-item.status-downloading {
+  border-color: rgba(107, 171, 245, 0.7);
+}
+.download-item.status-completed {
+  border-color: rgba(108, 193, 142, 0.6);
+}
+.download-item.status-failed {
+  border-color: rgba(199, 89, 101, 0.6);
+}
+.download-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.download-item-name {
+  font-weight: 640;
+  font-size: 0.84rem;
+  color: var(--text-0);
+}
+.download-item-status {
+  color: var(--text-2);
+  font-size: 0.74rem;
+}
+.download-item-progress-bar {
+  height: 6px;
+  background: rgba(45, 63, 93, 0.9);
+  border-radius: 999px;
+  overflow: hidden;
+  width: 100%;
+}
+.download-item-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(77, 146, 235, 1), rgba(96, 172, 252, 1));
+  transition: width 0.3s ease;
+  position: relative;
+}
+.download-item.status-downloading .download-item-progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+  animation: shimmer 1.3s linear infinite;
+}
+.download-item.status-completed .download-item-progress-fill {
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.9), rgba(56, 211, 159, 1));
+}
+.download-item.status-failed .download-item-progress-fill {
+  background: linear-gradient(90deg, rgba(241, 115, 127, 0.9), rgba(210, 84, 103, 1));
+}
+.download-item-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.76rem;
+}
+.download-item-percent {
+  color: var(--text-2);
+}
+.download-item-actions {
+  display: flex;
+  gap: 6px;
+}
+.download-completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--success);
+  font-weight: 640;
+  font-size: 0.74rem;
+}
+.download-completed-badge::before {
+  content: "\2713";
+  font-size: 0.8rem;
+}
+.download-completed-size {
+  color: var(--text-2);
+}

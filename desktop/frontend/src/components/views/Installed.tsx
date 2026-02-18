@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
+import styles from './Installed.module.css';
 
 const InstalledItemThumbnail = ({ packageName, name }: { packageName: string, name: string }) => {
   const [src, setSrc] = useState<string | null>(null);
@@ -54,10 +55,12 @@ export default function InstalledView() {
 
   const renderAppList = (apps: any[], title: string, variant?: string) => {
     if (apps.length === 0) return null;
-    const sectionClass = variant === 'updates' ? 'installed-section installed-section-updates' : 'installed-section';
+    const sectionClass = variant === 'updates'
+      ? `${styles['installed-section']} ${styles['installed-section-updates']}`
+      : styles['installed-section'];
     return (
       <div className={sectionClass}>
-        <div className="installed-section-title">{title} ({apps.length})</div>
+        <div className={styles['installed-section-title']}>{title} ({apps.length})</div>
         {apps.map((app: any) => {
             const pkg = app.package_name;
             const name = app.app_name || pkg;
@@ -65,19 +68,19 @@ export default function InstalledView() {
             const size = app.size && app.size !== "0" ? app.size : null;
 
             return (
-                <div key={pkg} className="installed-item">
-                    <div className="installed-thumb">
+                <div key={pkg} className={styles['installed-item']}>
+                    <div className={styles['installed-thumb']}>
                       <InstalledItemThumbnail packageName={pkg} name={name} />
                     </div>
-                    <div className="installed-info">
-                        <div className={`installed-name ${app.update_available ? 'has-update' : ''}`}>{name}</div>
-                        <div className="installed-package">{pkg}</div>
-                        <div className="installed-version">
+                    <div className={styles['installed-info']}>
+                        <div className={`${styles['installed-name']}${app.update_available ? ` ${styles['has-update']}` : ''}`}>{name}</div>
+                        <div className={styles['installed-package']}>{pkg}</div>
+                        <div className={styles['installed-version']}>
                           v{version}
-                          {size && <span className="installed-size-tag"> | {size}</span>}
+                          {size && <span className={styles['installed-size-tag']}> | {size}</span>}
                         </div>
                     </div>
-                    <div className="installed-actions">
+                    <div className={styles['installed-actions']}>
                         {app.update_available && (
                             <button
                                 className={`btn-sm install-accent${installingPackages.has(pkg) ? ' btn-installing' : ''}`}
@@ -133,7 +136,7 @@ export default function InstalledView() {
         </div>
       ) : (
         <>
-          <div className="installed-summary" id="installed-summary">
+          <div className={styles['installed-summary']} id="installed-summary">
             <span><strong>{installedApps.length}</strong> apps installed</span>
             {updates.length > 0 && <span><strong>{updates.length}</strong> update{updates.length > 1 ? 's' : ''} available</span>}
           </div>
@@ -141,7 +144,7 @@ export default function InstalledView() {
           <input
             type="text"
             id="installed-filter-input"
-            className="installed-filter-input"
+            className={styles['installed-filter-input']}
             placeholder="Search installed apps..."
             autoComplete="off"
             spellCheck={false}
@@ -149,14 +152,14 @@ export default function InstalledView() {
             onChange={(e) => setFilter(e.target.value)}
           />
 
-          <div id="installed-apps-list-new" className="installed-list">
+          <div id="installed-apps-list-new" className={styles['installed-list']}>
             {filteredApps.length === 0 && (
               <div className="empty-state">
                 <div className="empty-state-title">No matching apps</div>
                 <div className="empty-state-hint">Try a different search term</div>
               </div>
             )}
-            
+
             {renderAppList(updates, "Update Available", "updates")}
             {renderAppList(inCatalog, "In Catalog")}
             {renderAppList(others, "Other Installed Apps")}

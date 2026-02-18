@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Game } from '../../types';
 import { api } from '../../services/api';
+import styles from './GameDetailModal.module.css';
 
 interface GameDetailModalProps {
   game: Game;
@@ -127,68 +128,68 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
 
   return (
     <div
-      className="modal-overlay"
+      className={styles['modal-overlay']}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="modal-container">
+      <div className={styles['modal-container']}>
         {/* Header */}
-        <div className="modal-header-row">
-          <h1 className="modal-game-title">{game.game_name || game.release_name}</h1>
-          <button className="modal-close-btn" onClick={onClose} aria-label="Close">
+        <div className={styles['modal-header-row']}>
+          <h1 className={styles['modal-game-title']}>{game.game_name || game.release_name}</h1>
+          <button className={styles['modal-close-btn']} onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
 
         {/* Main Content Grid */}
-        <div className="modal-body">
+        <div className={styles['modal-body']}>
           {/* Left Column */}
-          <div className="modal-col-left">
-            <div className="modal-media-thumb">
+          <div className={styles['modal-col-left']}>
+            <div className={styles['modal-media-thumb']}>
               {thumbnailSrc ? (
                 <img src={thumbnailSrc} alt={game.game_name} />
               ) : (
-                <div className="modal-thumb-placeholder">{fallbackLabel}</div>
+                <div className={styles['modal-thumb-placeholder']}>{fallbackLabel}</div>
               )}
             </div>
-            
-            <div className="modal-meta-panel">
-              <div className="meta-row">
-                <span className="meta-key">Package</span>
-                <span className="meta-val" title={game.package_name}>{game.package_name}</span>
+
+            <div className={styles['modal-meta-panel']}>
+              <div className={styles['meta-row']}>
+                <span className={styles['meta-key']}>Package</span>
+                <span className={styles['meta-val']} title={game.package_name}>{game.package_name}</span>
               </div>
-              <div className="meta-row">
-                <span className="meta-key">Version</span>
-                <span className="meta-val">{game.version_code}</span>
+              <div className={styles['meta-row']}>
+                <span className={styles['meta-key']}>Version</span>
+                <span className={styles['meta-val']}>{game.version_code}</span>
               </div>
-              <div className="meta-row">
-                <span className="meta-key">Size</span>
-                <span className="meta-val">
+              <div className={styles['meta-row']}>
+                <span className={styles['meta-key']}>Size</span>
+                <span className={styles['meta-val']}>
                   {(!game.size || game.size === '0' || game.size === '0 MB') ? 'Unknown' : game.size}
                 </span>
               </div>
-              <div className="meta-row">
-                <span className="meta-key">Downloads</span>
-                <span className="meta-val">{game.downloads || '0'}</span>
+              <div className={styles['meta-row']}>
+                <span className={styles['meta-key']}>Downloads</span>
+                <span className={styles['meta-val']}>{game.downloads || '0'}</span>
               </div>
               {game.last_updated && (
-                <div className="meta-row">
-                  <span className="meta-key">Updated</span>
-                  <span className="meta-val">{game.last_updated}</span>
+                <div className={styles['meta-row']}>
+                  <span className={styles['meta-key']}>Updated</span>
+                  <span className={styles['meta-val']}>{game.last_updated}</span>
                 </div>
               )}
             </div>
           </div>
 
           {/* Right Column */}
-          <div className="modal-col-right">
-            <div className="modal-video-wrapper">
+          <div className={styles['modal-col-right']}>
+            <div className={styles['modal-video-wrapper']}>
               {loadingTrailer ? (
-                <div className="video-loading-state">
-                  <div className="spinner" />
+                <div className={styles['video-loading-state']}>
+                  <div className={styles['spinner']} />
                   <span>Finding trailer...</span>
                 </div>
               ) : trailerId ? (
@@ -199,18 +200,18 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
                   allowFullScreen
                 />
               ) : (
-                <div className="video-empty-state">
+                <div className={styles['video-empty-state']}>
                   <span>No trailer found</span>
                 </div>
               )}
             </div>
 
             {releaseNotes && (
-              <div className="modal-notes-section">
-                <h3 className="notes-title">Release Notes</h3>
-                <div className="notes-content">
+              <div className={styles['modal-notes-section']}>
+                <h3 className={styles['notes-title']}>Release Notes</h3>
+                <div className={styles['notes-content']}>
                   {loadingNotes ? (
-                    <div className="spinner-small" />
+                    <div className={styles['spinner-small']} />
                   ) : (
                     <pre>{releaseNotes}</pre>
                   )}
@@ -221,10 +222,10 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="modal-footer">
+        <div className={styles['modal-footer']}>
           <button
             type="button"
-            className={`action-btn-primary ${isBusy ? 'busy' : ''}`}
+            className={`${styles['action-btn-primary']}${isBusy ? ' busy' : ''}`}
             onClick={handlePrimaryAction}
             disabled={isBusy}
           >
@@ -235,7 +236,7 @@ export const GameDetailModal: React.FC<GameDetailModalProps> = ({
           {!isInstalled && downloadStatus !== 'completed' && (
             <button
               type="button"
-              className="action-btn-secondary"
+              className={styles['action-btn-secondary']}
               onClick={handleDownloadOnly}
               disabled={isBusy || downloadStatus === 'completed'}
             >
