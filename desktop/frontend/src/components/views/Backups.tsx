@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
+import styles from './Backups.module.css';
 
 export default function BackupsView() {
   const { installedApps, gameMap } = useApp();
@@ -50,14 +51,14 @@ export default function BackupsView() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      <div className="backup-create-card">
-        <h3 className="backup-card-title">Create Backup</h3>
-        <p className="backup-card-subtitle">Select an installed app to back up its save data</p>
-        <div className="backup-create-row">
+      <div className={styles['backup-create-card']}>
+        <h3 className={styles['backup-card-title']}>Create Backup</h3>
+        <p className={styles['backup-card-subtitle']}>Select an installed app to back up its save data</p>
+        <div className={styles['backup-create-row']}>
           <select
             value={selectedApp}
             onChange={(e) => setSelectedApp(e.target.value)}
-            className="backup-app-select"
+            className={styles['backup-app-select']}
           >
             <option value="">-- Select Installed App --</option>
             {installedApps.map((app: any) => {
@@ -80,9 +81,9 @@ export default function BackupsView() {
         </div>
       </div>
 
-      <div className="backup-list-section">
-        <div className="backup-list-header">
-          <h3 className="backup-card-title">Saved Backups</h3>
+      <div className={styles['backup-list-section']}>
+        <div className={styles['backup-list-header']}>
+          <h3 className={styles['backup-card-title']}>Saved Backups</h3>
           <button type="button" className="btn-sm btn-icon btn-ghost" onClick={fetchBackups} title="Refresh list">&#8635;</button>
         </div>
 
@@ -93,17 +94,17 @@ export default function BackupsView() {
             <div className="empty-state-hint">Create a backup from an installed app above</div>
           </div>
         ) : (
-          <div className="backup-list">
+          <div className={styles['backup-list']}>
             {backups.map((b: any) => {
               const pkg = b.package_name;
               const name = gameMap.get(pkg)?.game_name || pkg;
               return (
-                <div key={`${pkg}-${b.timestamp}`} className="backup-item">
-                  <div className="backup-item-info">
-                    <div className="backup-item-name">{name}</div>
-                    <div className="backup-item-package">{pkg}</div>
+                <div key={`${pkg}-${b.timestamp}`} className={styles['backup-item']}>
+                  <div className={styles['backup-item-info']}>
+                    <div className={styles['backup-item-name']}>{name}</div>
+                    <div className={styles['backup-item-package']}>{pkg}</div>
                   </div>
-                  <div className="backup-item-date">
+                  <div className={styles['backup-item-date']}>
                     {new Date(b.timestamp * 1000).toLocaleString()}
                   </div>
                   <button

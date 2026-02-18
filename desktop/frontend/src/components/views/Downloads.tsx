@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { DownloadItem } from '../Downloads/DownloadItem';
 import { api } from '../../services/api';
+import styles from './Downloads.module.css';
 
 export default function DownloadsView() {
   const { downloadQueue, gameMap, refreshQueue } = useApp();
@@ -71,10 +72,10 @@ export default function DownloadsView() {
   const activeDownloads = Array.from(activeMap.values());
   const activePkgNames = new Set(activeMap.keys());
 
-  const pendingDownloads = queue.filter((i: any) => 
-    i.status !== 'downloading' && 
-    i.status !== 'extracting' && 
-    i.status !== 'completed' && 
+  const pendingDownloads = queue.filter((i: any) =>
+    i.status !== 'downloading' &&
+    i.status !== 'extracting' &&
+    i.status !== 'completed' &&
     i.status !== 'cancelled' &&
     i.status !== 'failed' &&
     !activePkgNames.has(`${i.package_name}|${i.release_name}`)
@@ -113,10 +114,10 @@ export default function DownloadsView() {
           <div className="empty-state-hint">Browse the Library and queue games for download</div>
         </div>
       ) : (
-        <div className="download-list-container">
+        <div className={styles['download-list-container']}>
           {activeDownloads.length > 0 && (
-            <div className="download-section">
-              <h3 className="download-section-header">Active</h3>
+            <div className={styles['download-section']}>
+              <h3 className={styles['download-section-header']}>Active</h3>
               {activeDownloads.map((item: any) => (
                 <DownloadItem
                   key={`${item.package_name}-${item.release_name}`}
@@ -133,8 +134,8 @@ export default function DownloadsView() {
           )}
 
           {pendingDownloads.length > 0 && (
-            <div className="download-section">
-              <h3 className="download-section-header">Queued ({pendingDownloads.length})</h3>
+            <div className={styles['download-section']}>
+              <h3 className={styles['download-section-header']}>Queued ({pendingDownloads.length})</h3>
               {pendingDownloads.map((item: any) => (
                 <DownloadItem
                   key={`${item.package_name}-${item.release_name}`}
@@ -151,8 +152,8 @@ export default function DownloadsView() {
           )}
 
           {failedDownloads.length > 0 && (
-            <div className="download-section">
-              <h3 className="download-section-header">Failed / Cancelled</h3>
+            <div className={styles['download-section']}>
+              <h3 className={styles['download-section-header']}>Failed / Cancelled</h3>
               {failedDownloads.map((item: any) => (
                 <DownloadItem
                   key={`${item.package_name}-${item.release_name}`}
@@ -169,8 +170,8 @@ export default function DownloadsView() {
           )}
 
           {completedDownloads.length > 0 && (
-            <div className="download-section">
-              <h3 className="download-section-header">Completed</h3>
+            <div className={styles['download-section']}>
+              <h3 className={styles['download-section-header']}>Completed</h3>
               {completedDownloads.map((item: any) => (
                 <DownloadItem
                   key={`${item.package_name}-${item.release_name}`}

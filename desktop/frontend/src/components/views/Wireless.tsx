@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
+import styles from './Wireless.module.css';
 
 export default function WirelessView() {
   const { deviceStatus, refreshDevice } = useApp();
@@ -71,22 +72,20 @@ export default function WirelessView() {
           <p className="panel-subtitle">Connect to your Quest over Wi-Fi without a USB cable</p>
         </div>
         {endpoint && (
-          <span className={`wireless-connection-badge ${isConnected ? 'badge-ok' : 'badge-idle'}`}>
+          <span className={`${styles['wireless-connection-badge']} ${isConnected ? styles['badge-ok'] : styles['badge-idle']}`}>
             {isConnected ? `Connected · ${endpoint}` : endpoint}
           </span>
         )}
       </div>
 
-      {/* Status feedback */}
       {status && (
-        <div className={`wireless-status-bar wireless-status-${status.kind}`}>
+        <div className={`${styles['wireless-status-bar']} ${styles[`wireless-status-${status.kind}`]}`}>
           {status.msg}
         </div>
       )}
 
-      <div className="wireless-grid">
-        {/* Setup column */}
-        <div className="wireless-section">
+      <div className={styles['wireless-grid']}>
+        <div className={styles['wireless-section']}>
           <h3 className="diagnostics-section-title">Setup</h3>
           <p className="diagnostics-section-hint">
             Plug in via USB first, then click <strong>Setup via USB</strong> to enable wireless mode and auto-detect your IP address.
@@ -101,13 +100,13 @@ export default function WirelessView() {
           </div>
 
           {scanned.length > 0 && (
-            <div className="wireless-scan-results">
-              <span className="wireless-scan-label">Found devices — click to select:</span>
+            <div className={styles['wireless-scan-results']}>
+              <span className={styles['wireless-scan-label']}>Found devices — click to select:</span>
               {scanned.map(ip => (
                 <button
                   key={ip}
                   type="button"
-                  className={`wireless-scan-item ${endpoint === ip ? 'active' : ''}`}
+                  className={`${styles['wireless-scan-item']}${endpoint === ip ? ` ${styles['active']}` : ''}`}
                   onClick={() => { setEndpoint(ip); setScanned([]); }}
                 >
                   {ip}
@@ -117,13 +116,12 @@ export default function WirelessView() {
           )}
         </div>
 
-        {/* Connect column */}
-        <div className="wireless-section">
+        <div className={styles['wireless-section']}>
           <h3 className="diagnostics-section-title">Connect</h3>
           <p className="diagnostics-section-hint">Enter an IP:port manually or pick one from a scan above.</p>
           <input
             type="text"
-            className="wireless-endpoint-input"
+            className={styles['wireless-endpoint-input']}
             placeholder="192.168.1.20:5555"
             value={endpoint}
             onChange={e => setEndpoint(e.target.value)}
@@ -143,7 +141,7 @@ export default function WirelessView() {
             </button>
           </div>
 
-          <label className="wireless-auto-label">
+          <label className={styles['wireless-auto-label']}>
             <input
               type="checkbox"
               checked={autoReconnect}
@@ -158,15 +156,14 @@ export default function WirelessView() {
         </div>
       </div>
 
-      {/* How it works */}
-      <div className="wireless-howto">
+      <div className={styles['wireless-howto']}>
         <h3 className="diagnostics-section-title">How it works</h3>
-        <ol className="wireless-steps">
-          <li><span className="wireless-step-num">1</span> Connect your Quest via USB cable</li>
-          <li><span className="wireless-step-num">2</span> Click <strong>Setup via USB</strong> — this puts ADB into TCP mode and reads your device IP</li>
-          <li><span className="wireless-step-num">3</span> Unplug the cable</li>
-          <li><span className="wireless-step-num">4</span> Click <strong>Connect</strong></li>
-          <li><span className="wireless-step-num">5</span> Enable <strong>Auto-reconnect</strong> so it connects automatically next time</li>
+        <ol className={styles['wireless-steps']}>
+          <li><span className={styles['wireless-step-num']}>1</span> Connect your Quest via USB cable</li>
+          <li><span className={styles['wireless-step-num']}>2</span> Click <strong>Setup via USB</strong> — this puts ADB into TCP mode and reads your device IP</li>
+          <li><span className={styles['wireless-step-num']}>3</span> Unplug the cable</li>
+          <li><span className={styles['wireless-step-num']}>4</span> Click <strong>Connect</strong></li>
+          <li><span className={styles['wireless-step-num']}>5</span> Enable <strong>Auto-reconnect</strong> so it connects automatically next time</li>
         </ol>
       </div>
     </section>
