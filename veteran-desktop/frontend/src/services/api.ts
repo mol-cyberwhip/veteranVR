@@ -148,6 +148,23 @@ export const api = {
     return result.data;
   },
 
+  installLocalApk: async (path: string) => {
+    const apkPath = path.trim();
+    if (!apkPath) {
+      throw new Error("Select an APK file first.");
+    }
+    if (!apkPath.toLowerCase().endsWith(".apk")) {
+      throw new Error("Only .apk files can be sideloaded.");
+    }
+
+    const result = await commands.backendInstallLocal(apkPath);
+    if (result.status === "error") throw new Error(result.error);
+    if (!result.data.success) {
+      throw new Error(result.data.message || "Local APK install failed");
+    }
+    return result.data;
+  },
+
   backupApp: async (packageName: string, includeObb = true) => {
     return invoke("backend_backup_save_data", { packageName, includeObb });
   },
