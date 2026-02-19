@@ -91,6 +91,22 @@ class QuestRemoteDataSource(
         resume: Boolean,
         onChunk: (bytesRead: Long) -> Unit,
     ) {
+        downloadToFileInternal(
+            url = url,
+            destination = destination,
+            resume = resume,
+            onChunk = onChunk,
+            tried416Recovery = false,
+        )
+    }
+
+    private fun downloadToFileInternal(
+        url: String,
+        destination: File,
+        resume: Boolean,
+        onChunk: (bytesRead: Long) -> Unit,
+        tried416Recovery: Boolean,
+    ) {
         val existingLength = if (resume && destination.exists()) destination.length() else 0L
 
         val requestBuilder = Request.Builder()
@@ -104,6 +120,27 @@ class QuestRemoteDataSource(
         val request = requestBuilder.build()
 
         client.newCall(request).execute().use { response ->
+            if (response.code == 416 && existingLength > 0L && !tried416Recovery) {
+                val headResult = runCatching { head(url) }.getOrNull()
+                val alreadyComplete = headResult?.contentLength?.let { remoteLength ->
+                    remoteLength > 0L && existingLength == remoteLength
+                } ?: false
+
+                if (alreadyComplete) {
+                    return
+                }
+
+                destination.delete()
+                downloadToFileInternal(
+                    url = url,
+                    destination = destination,
+                    resume = false,
+                    onChunk = onChunk,
+                    tried416Recovery = true,
+                )
+                return
+            }
+
             if (!response.isSuccessful) {
                 throw IOException("Download failed for $url with ${response.code}")
             }
