@@ -1,0 +1,25 @@
+[workspace]
+members = ["src-tauri"]
+resolver = "2"
+
+
+[profile.dev]
+incremental = true      # fast recompiles of your own code
+panic = "abort"         # smaller binary, faster linking (no unwinding tables)
+debug = 1               # line tables only — enough for backtraces, much smaller than full debug info
+split-debuginfo = "unpacked"  # macOS: keep .dSYM out of the binary
+codegen-units = 256     # maximise parallelism during compilation
+
+# Compile all dependencies fully optimised with no debug info.
+# Combined with sccache (configured in ~/.cargo/config.toml) these only
+# need to be compiled once and are then cached across all projects.
+[profile.dev.package."*"]
+opt-level = 3
+debug = false           # no debug info for deps → smaller artifacts, faster links
+
+[profile.release]
+opt-level = 3
+lto = "thin"            # cross-crate inlining — smaller + faster binary, manageable link time
+codegen-units = 1       # single unit for best optimisation (release doesn't need parallelism)
+strip = "symbols"       # strip symbol table from final binary
+panic = "abort"         # no unwinding tables

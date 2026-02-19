@@ -24,10 +24,10 @@ build/
 *.log
 
 # Tauri/Rust
-desktop/target/
-desktop/src-tauri/target/
-desktop/gen/
-desktop/src-tauri/gen/
+veteran-desktop/target/
+veteran-desktop/src-tauri/target/
+veteran-desktop/gen/
+veteran-desktop/src-tauri/gen/
 
 # Dependency managers
 Cargo.lock
@@ -54,4 +54,4 @@ playwright-report/
 test-results/
 
 # Binaries
-desktop/src-tauri/binaries/
+veteran-desktop/src-tauri/binaries/
