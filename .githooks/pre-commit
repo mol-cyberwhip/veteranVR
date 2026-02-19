@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Block commits when your username appears in the staged repository snapshot.
+needle="${USERNAME:-${USER:-}}"
+
+if [[ -z "${needle// }" ]]; then
+  echo "[pre-commit] USERNAME is not set."
+  echo "[pre-commit] Set USERNAME in your shell profile (for example ~/.zshrc)."
+  exit 1
+fi
+
+tmp_file="$(mktemp)"
+trap 'rm -f "$tmp_file"' EXIT
+
+if git grep --cached -n -I --fixed-strings --ignore-case -- "$needle" >"$tmp_file"; then
+  echo "[pre-commit] Blocked: found username value '${needle}' in staged files."
+  cat "$tmp_file"
+  echo "[pre-commit] Remove/redact the matches, then stage and commit again."
+  exit 1
+fi
