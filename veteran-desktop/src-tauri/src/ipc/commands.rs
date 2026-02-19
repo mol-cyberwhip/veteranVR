@@ -1625,7 +1625,14 @@ pub async fn backend_install_local(state: State<'_, AppState>, path: String) -> 
 #[specta]
 pub async fn backend_device_state(state: State<'_, AppState>) -> Result<DeviceState, String> {
     let devices = state.adb.get_devices().await.map_err(|err| err.to_string())?;
-    let selected = selected_serial(&state).await;
+    let mut selected = selected_serial(&state).await;
+
+    // Auto-select when exactly one device is connected and none is manually selected
+    if selected.is_none() && devices.len() == 1 {
+        let auto_serial = devices[0].serial.clone();
+        *state.selected_serial.write().await = Some(auto_serial.clone());
+        selected = Some(auto_serial);
+    }
 
     let devices_payload: Vec<DeviceInfo> = devices
         .iter()

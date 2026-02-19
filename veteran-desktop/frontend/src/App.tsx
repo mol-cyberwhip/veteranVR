@@ -19,7 +19,7 @@ const NAV_ITEMS = [
 
 function App() {
   const [activeTab, setActiveTab] = useState('library-view');
-  const { deviceStatus, downloadQueue, installedApps, refreshDevice } = useApp();
+  const { deviceStatus, downloadQueue, installedApps, refreshDevice, selectDevice } = useApp();
 
   const renderView = () => {
     switch (activeTab) {
@@ -78,7 +78,14 @@ function App() {
 
         <div className={styles['sidebar-device-info']}>
           <span className={styles['sidebar-label']}>Device</span>
-          <select id="sidebar-device-select" className={styles['device-select-dropdown']}>
+          <select
+            id="sidebar-device-select"
+            className={styles['device-select-dropdown']}
+            value={deviceStatus?.selected_serial || ''}
+            onChange={(e) => {
+              if (e.target.value) selectDevice(e.target.value);
+            }}
+          >
             <option value="">Auto-select device</option>
             {deviceStatus?.devices?.map((d: any) => (
                 <option key={d.serial} value={d.serial}>{d.serial} ({d.state})</option>
