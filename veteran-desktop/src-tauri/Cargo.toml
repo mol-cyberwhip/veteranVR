@@ -31,10 +31,6 @@ specta-typescript = "0.0.9"
 [dev-dependencies]
 tempfile = "3.10.0"
 
-[profile.dev]
-debug = 1              # Line-tables only — much smaller debug info
-split-debuginfo = "unpacked"  # Keep debug info in separate files (macOS default, explicit for clarity)
-
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]

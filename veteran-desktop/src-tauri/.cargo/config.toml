@@ -1,0 +1,5 @@
+# Redirect build artifacts to the workspace root target/ directory.
+# This prevents src-tauri/target/ from being created when cargo is run
+# directly from within this directory (e.g. `cargo test generate_bindings`).
+[build]
+target-dir = "../target"
