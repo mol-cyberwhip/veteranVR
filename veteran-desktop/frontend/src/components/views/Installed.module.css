@@ -133,3 +133,102 @@
   border-color: rgba(90, 163, 255, 0.95);
   box-shadow: 0 0 0 3px rgba(90, 163, 255, 0.2);
 }
+
+.sideload-panel {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 110, 180, 0.42);
+  background:
+    radial-gradient(circle at top right, rgba(96, 182, 255, 0.14), transparent 42%),
+    linear-gradient(165deg, rgba(21, 34, 56, 0.88), rgba(17, 28, 44, 0.94));
+}
+
+.sideload-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sideload-title {
+  font-size: 0.86rem;
+  font-weight: 650;
+  color: var(--text-0);
+  line-height: 1.25;
+}
+
+.sideload-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.sideload-path-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sideload-path-label {
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.sideload-path {
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(63, 92, 134, 0.65);
+  background: rgba(9, 16, 26, 0.78);
+  color: var(--text-1);
+  font-size: 0.74rem;
+  font-family: ui-monospace, "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sideload-hint-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sideload-hint {
+  margin: 0;
+  font-size: 0.72rem;
+  color: var(--text-2);
+}
+
+.sideload-hint code {
+  font-size: 0.69rem;
+  color: var(--accent-soft);
+}
+
+.sideload-message {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--ok);
+}
+
+@media (max-width: 900px) {
+  .sideload-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sideload-actions {
+    justify-content: flex-start;
+  }
+}

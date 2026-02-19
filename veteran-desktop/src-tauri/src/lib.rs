@@ -8,6 +8,7 @@ use tauri::Manager;
 
 pub fn run() {
     let app = register_invoke_handler(tauri::Builder::default())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             crate::services::binary_paths::init(app.handle());
             app.manage(AppState::new());

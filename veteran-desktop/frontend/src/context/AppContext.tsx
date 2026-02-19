@@ -10,6 +10,8 @@ interface AppContextType {
   gameMap: Map<string, Game>;
   installingPackages: Map<string, string>; // pkg -> status message
   uninstallingPackages: Set<string>;
+  localInstallInProgress: boolean;
+  localInstallMessage: string | null;
   lastError: string | null;
   clearError: () => void;
   refreshDevice: () => Promise<void>;
@@ -18,6 +20,7 @@ interface AppContextType {
   refreshQueue: () => Promise<void>;
   startInstall: (pkg: string, releaseName?: string) => Promise<void>;
   startUninstall: (pkg: string) => Promise<void>;
+  startLocalInstall: (apkPath: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -30,6 +33,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [gameMap, setGameMap] = useState<Map<string, Game>>(new Map());
   const [installingPackages, setInstallingPackages] = useState<Map<string, string>>(new Map());
   const [uninstallingPackages, setUninstallingPackages] = useState<Set<string>>(new Set());
+  const [localInstallInProgress, setLocalInstallInProgress] = useState(false);
+  const [localInstallMessage, setLocalInstallMessage] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
   const installingOpsRef = useRef<Map<string, string>>(new Map()); // operationId -> packageName
   const startupSyncTriggeredRef = useRef(false);
@@ -136,7 +141,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       refreshLibraryMap();
   }, [catalogStatus?.synced]);
 
-  const refreshDevice = async () => {
+  const refreshDevice = useCallback(async () => {
     try {
         const status = await api.getDeviceState();
         setDeviceStatus(status);
@@ -146,7 +151,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const apps = result?.apps ?? result;
         setInstalledApps(Array.isArray(apps) ? apps : []);
     } catch (e) { console.error(e); }
-  };
+  }, []);
 
   const syncCatalog = async () => {
     try {
@@ -195,6 +200,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
   }, []);
+
+  const startLocalInstall = useCallback(async (apkPath: string) => {
+    const resolvedPath = apkPath.trim();
+    if (!resolvedPath) {
+      const message = "Select an APK file before sideloading.";
+      setLastError(message);
+      throw new Error(message);
+    }
+
+    setLastError(null);
+    setLocalInstallInProgress(true);
+    setLocalInstallMessage("Installing local APK...");
+
+    try {
+      const result = await api.installLocalApk(resolvedPath);
+      setLocalInstallMessage(result.message || "Local APK installed.");
+      await refreshDevice();
+      setTimeout(() => setLocalInstallMessage(null), 6000);
+    } catch (e: any) {
+      const message = e?.message || "Failed to sideload local APK.";
+      setLocalInstallMessage(null);
+      setLastError(message);
+      throw e;
+    } finally {
+      setLocalInstallInProgress(false);
+    }
+  }, [refreshDevice]);
 
   // Watch for install completion events via polling
   useEffect(() => {
@@ -261,6 +293,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         gameMap,
         installingPackages,
         uninstallingPackages,
+        localInstallInProgress,
+        localInstallMessage,
         lastError,
         clearError,
         refreshDevice,
@@ -269,6 +303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         refreshQueue,
         startInstall,
         startUninstall,
+        startLocalInstall,
     }}>
       {children}
     </AppContext.Provider>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { open } from '@tauri-apps/plugin-dialog';
 import { useApp } from '../../context/AppContext';
 import { api } from '../../services/api';
 import styles from './Installed.module.css';
@@ -21,9 +22,21 @@ const InstalledItemThumbnail = ({ packageName, name }: { packageName: string, na
 };
 
 export default function InstalledView() {
-  const { installedApps, deviceStatus, refreshDevice, installingPackages, uninstallingPackages, startInstall, startUninstall } = useApp();
+  const {
+    installedApps,
+    deviceStatus,
+    refreshDevice,
+    installingPackages,
+    uninstallingPackages,
+    localInstallInProgress,
+    localInstallMessage,
+    startInstall,
+    startUninstall,
+    startLocalInstall,
+  } = useApp();
   const [filter, setFilter] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [selectedApkPath, setSelectedApkPath] = useState<string>('');
 
   const deviceConnected = deviceStatus?.status === 'connected' || deviceStatus?.status === 'multiple_connected';
 
@@ -50,6 +63,62 @@ export default function InstalledView() {
         await startInstall(pkg);
     } catch (e: any) {
         setError(`${e.message || 'Failed to start install'}. Check Diagnostics for details.`);
+    }
+  };
+
+  const handlePickApk = async () => {
+    try {
+      const selection = await open({
+        multiple: false,
+        directory: false,
+        title: 'Select APK to sideload',
+        filters: [
+          { name: 'Android APK', extensions: ['apk'] },
+        ],
+      });
+
+      if (!selection || Array.isArray(selection)) return;
+      setSelectedApkPath(selection);
+      setError(null);
+    } catch (e: any) {
+      setError(e?.message || 'Failed to open file picker.');
+    }
+  };
+
+  const handleInstallSelectedApk = async () => {
+    if (!deviceConnected) {
+      setError('Connect a Quest device before sideloading local APKs.');
+      return;
+    }
+    if (!selectedApkPath) {
+      setError('Select an APK file first.');
+      return;
+    }
+    try {
+      setError(null);
+      await startLocalInstall(selectedApkPath);
+    } catch (e: any) {
+      setError(`${e?.message || 'Failed to sideload local APK'}. Check Diagnostics for details.`);
+    }
+  };
+
+  const handlePickAndInstall = async () => {
+    try {
+      const selection = await open({
+        multiple: false,
+        directory: false,
+        title: 'Select APK to sideload',
+        filters: [
+          { name: 'Android APK', extensions: ['apk'] },
+        ],
+      });
+
+      if (!selection || Array.isArray(selection)) return;
+      setSelectedApkPath(selection);
+      setError(null);
+      await startLocalInstall(selection);
+    } catch (e: any) {
+      setError(`${e?.message || 'Failed to sideload local APK'}. Check Diagnostics for details.`);
     }
   };
 
@@ -127,6 +196,59 @@ export default function InstalledView() {
       </div>
 
       {error && <div className="error-banner">{error}</div>}
+
+      <div className={styles['sideload-panel']}>
+        <div className={styles['sideload-header']}>
+          <div>
+            <span className="card-expanded-label">Local Sideload</span>
+            <div className={styles['sideload-title']}>Install existing APK to connected Quest</div>
+          </div>
+          <div className={styles['sideload-actions']}>
+            <button
+              type="button"
+              className="btn-sm btn-secondary"
+              onClick={handlePickApk}
+              disabled={localInstallInProgress}
+            >
+              Choose APK
+            </button>
+            <button
+              type="button"
+              className={`btn-sm btn-primary${localInstallInProgress ? ' btn-installing' : ''}`}
+              onClick={handleInstallSelectedApk}
+              disabled={!deviceConnected || !selectedApkPath || localInstallInProgress}
+            >
+              {localInstallInProgress && <span className="btn-spinner" />}
+              Install Selected
+            </button>
+            <button
+              type="button"
+              className={`btn-sm btn-success${localInstallInProgress ? ' btn-installing' : ''}`}
+              onClick={handlePickAndInstall}
+              disabled={!deviceConnected || localInstallInProgress}
+            >
+              {localInstallInProgress && <span className="btn-spinner" />}
+              Pick + Install
+            </button>
+          </div>
+        </div>
+
+        <div className={styles['sideload-path-row']}>
+          <span className={styles['sideload-path-label']}>Selected</span>
+          <span className={styles['sideload-path']} title={selectedApkPath || 'No APK selected'}>
+            {selectedApkPath || 'No APK selected'}
+          </span>
+        </div>
+
+        <div className={styles['sideload-hint-row']}>
+          <span className={styles['sideload-hint']}>
+            Requires an authorized Quest connection. Use the debug APK from
+            {' '}
+            <code>veteran-quest-app/app/build/outputs/apk/debug/app-debug.apk</code>.
+          </span>
+          {localInstallMessage && <span className={styles['sideload-message']}>{localInstallMessage}</span>}
+        </div>
+      </div>
 
       {!deviceConnected ? (
         <div className="empty-state">
