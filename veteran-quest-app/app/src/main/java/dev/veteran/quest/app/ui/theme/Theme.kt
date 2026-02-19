@@ -4,13 +4,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import dev.veteran.quest.app.R
+import dev.veteran.quest.app.ui.tokens.VeteranQuestColors
 
 private val rajdhani = FontFamily(
     Font(R.font.rajdhani_regular, FontWeight.Normal),
@@ -26,19 +26,25 @@ private val jetBrainsMono = FontFamily(
 )
 
 private val Colors = darkColorScheme(
-    primary = Color(0xFF33D5A5),
-    onPrimary = Color(0xFF02140F),
-    secondary = Color(0xFF77B8FF),
-    background = Color(0xFF0A1323),
-    surface = Color(0xFF101C31),
+    primary = VeteranQuestColors.accent,
+    onPrimary = VeteranQuestColors.bg0,
+    secondary = VeteranQuestColors.accentStrong,
+    background = VeteranQuestColors.bg0,
+    surface = VeteranQuestColors.bg1,
+    onSurface = VeteranQuestColors.text0,
 )
 
 private val VeteranTypography = Typography(
-    headlineSmall = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 30.sp),
-    titleMedium = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 20.sp),
-    bodyMedium = TextStyle(fontFamily = atkinson, fontWeight = FontWeight.Normal, fontSize = 15.sp),
-    bodySmall = TextStyle(fontFamily = atkinson, fontWeight = FontWeight.Normal, fontSize = 13.sp),
-    labelLarge = TextStyle(fontFamily = jetBrainsMono, fontWeight = FontWeight.Normal, fontSize = 13.sp),
+    headlineLarge = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 40.sp),
+    headlineSmall = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 32.sp),
+    titleLarge = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 24.sp),
+    titleMedium = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 21.sp),
+    titleSmall = TextStyle(fontFamily = rajdhani, fontWeight = FontWeight.SemiBold, fontSize = 19.sp),
+    bodyLarge = TextStyle(fontFamily = atkinson, fontWeight = FontWeight.Normal, fontSize = 18.sp),
+    bodyMedium = TextStyle(fontFamily = atkinson, fontWeight = FontWeight.Normal, fontSize = 16.sp),
+    bodySmall = TextStyle(fontFamily = atkinson, fontWeight = FontWeight.Normal, fontSize = 14.sp),
+    labelLarge = TextStyle(fontFamily = jetBrainsMono, fontWeight = FontWeight.Normal, fontSize = 14.sp),
+    labelMedium = TextStyle(fontFamily = jetBrainsMono, fontWeight = FontWeight.Normal, fontSize = 12.sp),
     labelSmall = TextStyle(fontFamily = jetBrainsMono, fontWeight = FontWeight.Normal, fontSize = 11.sp),
 )
 

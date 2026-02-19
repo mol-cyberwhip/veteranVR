@@ -10,6 +10,8 @@ import dev.veteran.quest.app.model.DownloadState
 import dev.veteran.quest.app.model.LibraryItemUi
 import dev.veteran.quest.app.model.OperationLogEntry
 import dev.veteran.quest.app.model.PermissionGateStatus
+import dev.veteran.quest.app.ui.tokens.MotionProfile
+import dev.veteran.quest.app.ui.tokens.UiDensity
 import dev.veteran.quest.installer.UninstallOptions
 import dev.veteran.quest.model.Game
 import dev.veteran.quest.model.LibraryFilter
@@ -35,6 +37,9 @@ data class QuestUiState(
     val keepDataOnUninstall: Boolean = false,
     val keepAwakeDuringOps: Boolean = true,
     val permissionStatus: PermissionGateStatus? = null,
+    val showDiagnostics: Boolean = false,
+    val uiDensity: UiDensity = UiDensity.COMFORTABLE,
+    val motionProfile: MotionProfile = MotionProfile.SUBTLE,
 ) {
     val activeOperation: DownloadOperation?
         get() = operations.firstOrNull {
@@ -44,6 +49,11 @@ data class QuestUiState(
                 DownloadState.EXTRACTING,
                 DownloadState.INSTALLING,
             )
+        }
+
+    val activeOperationLabel: String?
+        get() = activeOperation?.let { op ->
+            "${op.releaseName} ${op.state.name.lowercase()} ${op.progressPercent.toInt()}%"
         }
 }
 
@@ -62,7 +72,7 @@ class QuestViewModel(
             }
             launch {
                 repository.logs.collect { logs ->
-                    _state.value = _state.value.copy(logs = logs.takeLast(300).reversed())
+                    _state.value = _state.value.copy(logs = logs.takeLast(500).reversed())
                 }
             }
         }
@@ -101,6 +111,18 @@ class QuestViewModel(
 
     fun onKeepAwakeChanged(checked: Boolean) {
         _state.value = _state.value.copy(keepAwakeDuringOps = checked)
+    }
+
+    fun onShowDiagnosticsChanged(show: Boolean) {
+        _state.value = _state.value.copy(showDiagnostics = show)
+    }
+
+    fun onUiDensityChanged(density: UiDensity) {
+        _state.value = _state.value.copy(uiDensity = density)
+    }
+
+    fun onMotionProfileChanged(profile: MotionProfile) {
+        _state.value = _state.value.copy(motionProfile = profile)
     }
 
     fun refreshCatalog(force: Boolean) {

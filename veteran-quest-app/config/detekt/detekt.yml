@@ -33,3 +33,5 @@ exceptions:
 naming:
   FunctionNaming:
     active: false
+  MatchingDeclarationName:
+    active: false

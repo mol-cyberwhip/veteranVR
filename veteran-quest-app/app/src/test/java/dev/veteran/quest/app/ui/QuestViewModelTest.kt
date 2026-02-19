@@ -1,15 +1,17 @@
 package dev.veteran.quest.app.ui
 
+import com.google.common.truth.Truth.assertThat
 import dev.veteran.quest.app.data.QuestRepository
 import dev.veteran.quest.app.model.CatalogSyncSummary
 import dev.veteran.quest.app.model.DownloadOperation
+import dev.veteran.quest.app.model.DownloadState
 import dev.veteran.quest.app.model.LibraryItemUi
 import dev.veteran.quest.app.model.OperationLogEntry
 import dev.veteran.quest.app.model.PermissionGateStatus
+import dev.veteran.quest.app.ui.tokens.UiDensity
 import dev.veteran.quest.installer.UninstallOptions
 import dev.veteran.quest.model.Game
 import dev.veteran.quest.model.LibraryQuery
-import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,6 +75,42 @@ class QuestViewModelTest {
 
         assertThat(vm.state.value.message).contains("Complete setup gate")
     }
+
+    @Test
+    fun `active operation label formats status and percent`() = runTest {
+        val repo = FakeRepository()
+        val vm = QuestViewModel(repo)
+
+        repo.emitOperation(
+            DownloadOperation(
+                operationId = "op-1",
+                packageName = "pkg.sample",
+                releaseName = "Sample v1",
+                state = DownloadState.DOWNLOADING,
+                progressPercent = 42.2,
+                bytesDone = 10,
+                bytesTotal = 20,
+                speedBps = 123,
+                etaSeconds = 8,
+            ),
+        )
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.activeOperationLabel).isEqualTo("Sample v1 downloading 42%")
+    }
+
+    @Test
+    fun `diagnostics visibility and density can be toggled`() = runTest {
+        val repo = FakeRepository()
+        val vm = QuestViewModel(repo)
+
+        vm.onShowDiagnosticsChanged(true)
+        vm.onUiDensityChanged(UiDensity.BALANCED)
+        advanceUntilIdle()
+
+        assertThat(vm.state.value.showDiagnostics).isTrue()
+        assertThat(vm.state.value.uiDensity).isEqualTo(UiDensity.BALANCED)
+    }
 }
 
 private class FakeRepository(
@@ -83,6 +121,10 @@ private class FakeRepository(
 
     override val operations: StateFlow<List<DownloadOperation>> = operationFlow
     override val logs: StateFlow<List<OperationLogEntry>> = logFlow
+
+    fun emitOperation(operation: DownloadOperation) {
+        operationFlow.value = listOf(operation)
+    }
 
     override suspend fun syncCatalog(force: Boolean): Result<CatalogSyncSummary> {
         return Result.success(CatalogSyncSummary(System.currentTimeMillis(), 4, false))
