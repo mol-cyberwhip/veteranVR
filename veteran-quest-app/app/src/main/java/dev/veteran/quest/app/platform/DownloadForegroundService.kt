@@ -82,10 +82,9 @@ class DownloadForegroundService : Service() {
         }
 
         fun stop(context: Context) {
-            val intent = Intent(context, DownloadForegroundService::class.java).apply {
-                action = ACTION_STOP
-            }
-            context.startService(intent)
+            val intent = Intent(context, DownloadForegroundService::class.java)
+            // Avoid background service start restrictions when there is no active operation.
+            context.stopService(intent)
         }
     }
 }

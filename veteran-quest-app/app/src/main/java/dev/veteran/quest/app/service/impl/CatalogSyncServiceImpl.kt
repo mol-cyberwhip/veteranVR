@@ -72,7 +72,14 @@ class CatalogSyncServiceImpl(
                 extractDir.mkdirs()
 
                 extraction.extract7z(metaArchive, extractDir, config.password).getOrElse { error ->
-                    throw IllegalStateException("Failed to extract meta.7z", error)
+                    val detail = buildString {
+                        append(error.message ?: error::class.java.simpleName)
+                        error.cause?.message?.let { cause ->
+                            append(" | cause: ")
+                            append(cause)
+                        }
+                    }
+                    throw IllegalStateException("Failed to extract meta.7z: $detail", error)
                 }
             }
 
