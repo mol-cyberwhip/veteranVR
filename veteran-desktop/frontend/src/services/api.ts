@@ -185,6 +185,12 @@ export const api = {
     return invoke("poll_backend_events", { operationId: null, limit });
   },
 
+  selectDevice: async (serial: string) => {
+    const result = await commands.backendSelectDevice(serial);
+    if (result.status === "error") throw new Error(result.error);
+    return result.data;
+  },
+
   wirelessEnableTcpip: async () => {
     const result = await commands.backendWirelessEnableTcpip(null);
     if (result.status === "error") throw new Error(result.error);

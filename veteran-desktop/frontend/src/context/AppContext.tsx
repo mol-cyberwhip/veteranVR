@@ -18,6 +18,7 @@ interface AppContextType {
   syncCatalog: () => Promise<void>;
   refreshLibraryMap: () => Promise<void>;
   refreshQueue: () => Promise<void>;
+  selectDevice: (serial: string) => Promise<void>;
   startInstall: (pkg: string, releaseName?: string) => Promise<void>;
   startUninstall: (pkg: string) => Promise<void>;
   startLocalInstall: (apkPath: string) => Promise<void>;
@@ -140,6 +141,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
       refreshLibraryMap();
   }, [catalogStatus?.synced]);
+
+  const selectDevice = useCallback(async (serial: string) => {
+    try {
+        const status = await api.selectDevice(serial);
+        setDeviceStatus(status);
+    } catch (e) { console.error("Select device failed", e); }
+  }, []);
 
   const refreshDevice = useCallback(async () => {
     try {
@@ -297,6 +305,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localInstallMessage,
         lastError,
         clearError,
+        selectDevice,
         refreshDevice,
         syncCatalog,
         refreshLibraryMap,
