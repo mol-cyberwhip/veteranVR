@@ -2,6 +2,7 @@ package dev.veteran.quest.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,9 +18,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import dev.veteran.quest.app.R
 import dev.veteran.quest.app.ui.tokens.VeteranQuestColors
 
 @Composable
@@ -51,24 +55,18 @@ fun QuestTopBar(
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(48.dp)
                     .clip(RoundedCornerShape(11.dp))
-                    .background(
-                        Brush.linearGradient(
-                            listOf(
-                                VeteranQuestColors.accentStrong,
-                                VeteranQuestColors.success,
-                            ),
-                        ),
-                    )
-                    .border(1.dp, VeteranQuestColors.text1.copy(alpha = 0.35f), RoundedCornerShape(11.dp)),
+                    .border(1.dp, VeteranQuestColors.text1.copy(alpha = 0.28f), RoundedCornerShape(11.dp)),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    text = "V",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = VeteranQuestColors.bg0,
-                    fontWeight = FontWeight.Bold,
+                Image(
+                    painter = painterResource(id = R.drawable.veteran_vr_logo),
+                    contentDescription = "Veteran VR logo",
+                    modifier = Modifier
+                        .size(46.dp)
+                        .clip(RoundedCornerShape(10.dp)),
+                    contentScale = ContentScale.Crop,
                 )
             }
 
